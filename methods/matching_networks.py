@@ -1,63 +1,65 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+from torch.autograd import Variable
+
+# Implementacao original
+# https://github.com/facebookresearch/low-shot-shrink-hallucinate/blob/main/matching_network.py
+
+class FullyContextualEmbedding(nn.Module):
+    def __init__(self, feat_dim, K):
+        super(FullyContextualEmbedding, self).__init__()
+        self.lstmcell = nn.LSTMCell(feat_dim*2, feat_dim)
+        self.softmax = nn.Softmax(dim=0) #####
+        self.c_0 = Variable(torch.zeros(1,feat_dim))
+        self.feat_dim = feat_dim
+        self.K = K
+
+    def forward(self, f, G):
+        h = f
+        c = self.c_0.expand_as(f).to(f.device)
+        G_T = G.transpose(0,1)
+        for k in range(self.K):
+            logit_a = h.mm(G_T)
+            a = self.softmax(logit_a)
+            r = a.mm(G)
+            x = torch.cat((f, r),1)
+            h, c = self.lstmcell(x, (h, c))
+            h = h + f
+
+        return h
 
 
-# TODO
-class BidirectionalLSTM(nn.Module):
-    def __init__(self):
-        super(BidirectionalLSTM, self).__init__()
-
-    def forward(self):
-        pass
-
-
-class MatchingNetworks(nn.Module):
-    def __init__(self, backbone: nn.Module):
-        super(MatchingNetworks, self).__init__()
+class MatchingNetwork(nn.Module):
+    def __init__(self, backbone, feat_dim, K):
+        super(MatchingNetwork, self).__init__()
         self.backbone = backbone
-        self.LSTM = BidirectionalLSTM()
-
-    def g(self, z_support: torch.Tensor):
-        # TODO
-        return z_support
-
-
-    def f(self, z_query: torch.Tensor, z_support: torch.Tensor):
-        # TODO
-        return z_query
+        self.FCE = FullyContextualEmbedding(feat_dim, K)
+        self.G_encoder = nn.LSTM(feat_dim, feat_dim, 1, batch_first=True, bidirectional=True)
+        self.softmax = nn.Softmax(dim=0) #####
+        self.feat_dim = feat_dim
 
 
-    def forward(
-        self,
-        support_images: torch.Tensor,
-        support_labels: torch.Tensor,
-        query_images: torch.Tensor,
-        fce: bool = True,
-    ) -> torch.Tensor:
-        
-        # computa features 
-        z_support = self.backbone.forward(support_images)
-        z_query = self.backbone.forward(query_images)
-        
-        # media de todas as features de cada label
-        n_way = len(torch.unique(support_labels))
-        z_support = torch.cat(
-            [
-                z_support[torch.nonzero(support_labels == label)].mean(0)
-                for label in range(n_way)
-            ]
-        )
-    
-        # full context embedding
-        if fce:
-            z_support = self.g(z_support)
-            z_query = self.f(z_query, z_support)
+    def encode_training_set(self, S):
+        out_G = self.G_encoder(S.unsqueeze(0))[0]
+        out_G = out_G.squeeze(0)
+        G = S + out_G[:,:S.size(1)] + out_G[:,S.size(1):]
+        G_norm = G.pow(2).sum(1, keepdim=True).pow(0.5)  # keepdim=True ensures correct broadcasting #####
+        G_normalized = G / (G_norm + 1e-5)  # Use broadcasting instead of expand_as() #####
+        return G, G_normalized
 
-        # similaridade cosseno 
-        attention = F.cosine_similarity(z_query.unsqueeze(1), z_support.unsqueeze(0), dim=-1)  
-        attention = F.softmax(attention, dim=1) # shape: [n_query, n_way]
+    def get_logprobs(self, f, G, G_normalized, Y_S):
+        F = self.FCE(f, G)
+        scores = F.mm(G_normalized.transpose(0,1))
+        softmax = self.softmax(scores)
+        logprobs = softmax.mm(Y_S).log()
+        return logprobs
 
-        return attention
 
-        
+
+    def forward(self, S, Y_S, f):
+        S = self.backbone.forward(S) #####
+        f = self.backbone.forward(f) #####
+        G, G_normalized = self.encode_training_set(S)
+        logprobs = self.get_logprobs(f, G, G_normalized, Y_S)
+        return logprobs
+
