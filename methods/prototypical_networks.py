@@ -17,13 +17,14 @@ class PrototypicalNetworks(nn.Module):
         support_images: torch.Tensor,
         support_labels: torch.Tensor,
         query_images: torch.Tensor,
-    ) -> torch.Tensor:
-        
+    ) -> torch.Tensor:       
+
         # computa features 
         z_support = self.backbone.forward(support_images)
         z_query = self.backbone.forward(query_images)
 
         # um prototype eh a media de todas as features de cada label
+        support_labels = support_labels.argmax(1) # remove one-hot encoding
         n_way = len(torch.unique(support_labels))
         z_proto = torch.cat(
             [

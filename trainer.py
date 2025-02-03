@@ -9,16 +9,13 @@ def train_step(manager, model, optimizer, criterion, device):
         query_imgs, query_labels = query_batch
 
         # remove one-hot encoding das labels
-        train_labels = train_labels.argmax(1)
         query_labels = query_labels.argmax(1)
 
         train_imgs, train_labels = train_imgs.to(device), train_labels.to(device)
         query_imgs, query_labels = query_imgs.to(device), query_labels.to(device)
 
         scores = model(train_imgs, train_labels, query_imgs)
-        
         l2_reg = sum(torch.norm(param) for param in model.parameters())
-
         loss = criterion(scores, query_labels) + 1e-4 * l2_reg
 
         optimizer.zero_grad()
@@ -45,7 +42,6 @@ def validate(manager, model, criterion, device, episodes=400):
             test_imgs, test_labels = test_batch
 
             # remove one-hot encoding das labels
-            train_labels = train_labels.argmax(1)
             test_labels = test_labels.argmax(1)
 
             train_imgs, train_labels = train_imgs.to(device), train_labels.to(device)
@@ -54,8 +50,7 @@ def validate(manager, model, criterion, device, episodes=400):
             scores = model(train_imgs, train_labels, test_imgs)
 
             l2_reg = sum(torch.norm(param) for param in model.parameters())
-            loss = criterion(scores, test_labels) + 1e-4 * l2_reg
-            total_loss += loss.item()
+            total_loss += criterion(scores, test_labels) + 1e-4 * l2_reg
 
             n_correct += (scores.argmax(1) == test_labels).sum().item()
             n_total += len(test_labels)
