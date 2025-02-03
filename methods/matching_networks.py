@@ -6,19 +6,18 @@ from torch.autograd import Variable
 # https://github.com/facebookresearch/low-shot-shrink-hallucinate/blob/main/matching_network.py
 
 class FullyContextualEmbedding(nn.Module):
-    def __init__(self, feat_dim, K):
+    def __init__(self, feat_dim):
         super(FullyContextualEmbedding, self).__init__()
         self.lstmcell = nn.LSTMCell(feat_dim*2, feat_dim)
         self.softmax = nn.Softmax(dim=0) #####
         self.c_0 = Variable(torch.zeros(1,feat_dim))
         self.feat_dim = feat_dim
-        self.K = K
 
-    def forward(self, f, G):
+    def forward(self, f, G, n_ways):
         h = f
         c = self.c_0.expand_as(f).to(f.device)
         G_T = G.transpose(0,1)
-        for k in range(self.K):
+        for _ in range(n_ways):
             logit_a = h.mm(G_T)
             a = self.softmax(logit_a)
             r = a.mm(G)
@@ -29,11 +28,12 @@ class FullyContextualEmbedding(nn.Module):
         return h
 
 
-class MatchingNetwork(nn.Module):
-    def __init__(self, backbone, feat_dim, K):
-        super(MatchingNetwork, self).__init__()
+class MatchingNetworks(nn.Module):
+    def __init__(self, backbone):
+        super(MatchingNetworks, self).__init__()
+        feat_dim = backbone.num_features
         self.backbone = backbone
-        self.FCE = FullyContextualEmbedding(feat_dim, K)
+        self.FCE = FullyContextualEmbedding(feat_dim)
         self.G_encoder = nn.LSTM(feat_dim, feat_dim, 1, batch_first=True, bidirectional=True)
         self.softmax = nn.Softmax(dim=0) #####
         self.feat_dim = feat_dim
@@ -48,7 +48,8 @@ class MatchingNetwork(nn.Module):
         return G, G_normalized
 
     def get_logprobs(self, f, G, G_normalized, Y_S):
-        F = self.FCE(f, G)
+        n_ways = f.size(0) ##### estamos usando n_ways = query_shots 
+        F = self.FCE(f, G, n_ways)
         scores = F.mm(G_normalized.transpose(0,1))
         softmax = self.softmax(scores)
         logprobs = softmax.mm(Y_S).log()
