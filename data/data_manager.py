@@ -182,15 +182,3 @@ if __name__ == "__main__":
         print(img.mean())
         print(label)
     print(100*"#")
-
-
-
-
-
-
-        
-
-        
-
-
-
