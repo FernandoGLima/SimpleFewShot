@@ -111,16 +111,16 @@ class FEAT(nn.Module):
         ways = support_labels.shape[1] 
 
         support_labels = support_labels.argmax(1) 
-        proto = torch.cat([
+        z_proto = torch.cat([
             z_support[torch.nonzero(support_labels == label)].mean(0)
             for label in range(ways)
         ]) # shape: [ways, hdim]
 
         # this hack is necessary because we are using "batch_size" == 1 during training
-        proto = proto.unsqueeze(0) # [1, ways, hdim]
-        proto = self.slf_attn(proto, proto, proto).squeeze(0) # [ways, hdim]
+        z_proto = z_proto.unsqueeze(0) # [1, ways, hdim]
+        z_proto = self.slf_attn(z_proto, z_proto, z_proto).squeeze(0) # [ways, hdim]
 
-        logits = -self.distance(z_query, proto) # [query, ways]
+        logits = -self.distance(z_query, z_proto) # [query, ways]
 
         # contrastive regularization 
         query_labels = query_labels.argmax(1)
