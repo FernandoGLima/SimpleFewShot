@@ -2,8 +2,11 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
-# Implementacao original
+# Matching Networks 
+# https://arxiv.org/abs/1606.04080
+# Original implementation: 
 # https://github.com/facebookresearch/low-shot-shrink-hallucinate/blob/main/matching_network.py
+
 
 class FullyContextualEmbedding(nn.Module):
     def __init__(self, feat_dim):
@@ -57,7 +60,7 @@ class MatchingNetworks(nn.Module):
 
 
 
-    def forward(self, S, Y_S, f):
+    def forward(self, S, Y_S, f, *args):
         S = self.backbone.forward(S) #####
         f = self.backbone.forward(f) #####
         G, G_normalized = self.encode_training_set(S)
