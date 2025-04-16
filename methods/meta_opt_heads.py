@@ -442,3 +442,28 @@ class ClassificationHead(nn.Module):
             return self.scale * self.head(query, support, support_labels, n_way, n_shot, **kwargs)
         else:
             return self.head(query, support, support_labels, n_way, n_shot, **kwargs)
+
+
+class MetaOptNet(nn.Module):
+    def __init__(self, backbone, base_learner='SVM-CS', enable_scale=True):
+        super(MetaOptNet, self).__init__()
+        self.backbone = backbone
+        self.cls_head = ClassificationHead(base_learner, enable_scale)
+    
+    def forward(self, support, support_labels, query, *args):
+        emb_query = self.backbone.forward(query)
+        emb_support = self.backbone.forward(support)
+        
+        n_way = support_labels.size(1)
+        n_shot = support_labels.size(0) // n_way
+        support_labels = support_labels.argmax(1).reshape(-1)
+
+        scores = self.cls_head(
+            emb_query.unsqueeze(0),
+            emb_support.unsqueeze(0),
+            support_labels,
+            n_way=n_way,
+            n_shot=n_shot,
+        ).squeeze(0)
+        
+        return scores
