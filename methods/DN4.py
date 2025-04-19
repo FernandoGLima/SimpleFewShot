@@ -9,7 +9,7 @@ import torch.nn.functional as F
 class DN4(nn.Module):
     def __init__(self, backbone: nn.Module, k: int = 3):
         super().__init__()
-        self.backbone = backbone # backbone extracts feature maps 
+        self.backbone = backbone
         self.k = k
 
     def forward(self,
@@ -20,8 +20,8 @@ class DN4(nn.Module):
     ) -> torch.Tensor:       
 
         # extract last feature maps
-        z_support = self.backbone.forward(support_images)[-1] # [ways*shots, c, h, w]
-        z_query = self.backbone.forward(query_images)[-1]     # [query, c, h, w]
+        z_support = self.backbone.forward_features(support_images) # [ways*shots, c, h, w]
+        z_query = self.backbone.forward_features(query_images)     # [query, c, h, w]
 
         z_support = z_support.flatten(2, 3).permute(0, 2, 1) # [ways*shots, h*w, c]
         z_query = z_query.flatten(2, 3).permute(0, 2, 1)     # [query, h*w, c]
