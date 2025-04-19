@@ -1,121 +1,126 @@
 import torch
 import time
+from typing import Tuple, List
 
-class Trainer():
-    def __init__(self, 
+
+class Trainer:
+    def __init__(
+        self,
         model: torch.nn.Module,
-        optimizer: torch.optim.Optimizer, 
-        criterion: torch.nn.Module, 
+        optimizer: torch.optim.Optimizer,
+        criterion: torch.nn.Module,
+        l2_weight: float = 1e-4,
     ):
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
+        self.l2_weight = l2_weight
         self.device = next(model.parameters()).device
+        
+        method = self.model.__class__.__name__
+        self.evaluate = self._evaluate if method != 'FEAT' else self._evaluate_contrastive
 
-    def train(self, manager, epochs: int, episodes: int, validate_every: int):
-        train_logs = []
-        val_logs = []
-
-        self.model.train()
+    def train(self,
+        manager,
+        epochs: int,
+        episodes: int,
+        validate_every: int,
+    ) -> Tuple[List[Tuple[int, float, float]], List[Tuple[int, float, float]]]:
+        
         start_time = time.time()
+        self.model.train()
+        train_logs, val_logs = [], []
 
         for epoch in range(epochs):
-            total_loss, total_acc = 0, 0
-            train_time = time.time()
-
-            # training
-            for episode in range(episodes):
-                loss, acc = self.train_step(manager)
-                total_loss += loss
-                total_acc += acc
-                print(f'Episode {episode + 1}/{episodes}', end='\r')
-
-            loss = total_loss / episodes
-            acc = total_acc / episodes
-            print(f"Epoch {epoch + 1} - Loss: {loss:.3f} - Acc: {acc:.2f} - Time: {time.time() - train_time:.0f}s")
+            epoch_start = time.time()
+            loss, acc = self._run_episodes(manager, episodes, train=True)
             train_logs.append((epoch + 1, loss, acc))
+            print(f"Epoch {epoch + 1} - Loss: {loss:.3f} - Acc: {acc:.2f} - Time: {time.time() - epoch_start:.0f}s")
 
-            # validation
             if (epoch + 1) % validate_every == 0:
-                val_time = time.time()
+                val_start = time.time()
                 val_loss, val_acc = self.validate(manager)
-                print(f"Validation - Loss: {val_loss:.3f} - Acc: {val_acc:.2f} - Time: {time.time() - val_time:.0f}s\n")
                 val_logs.append((epoch + 1, val_loss, val_acc))
-        
+                print(f"Validation - Loss: {val_loss:.3f} - Acc: {val_acc:.2f} - Time: {time.time() - val_start:.0f}s\n")
+
         print(f'Training completed in {time.time() - start_time:.0f}s')
         return train_logs, val_logs
 
-    def train_step(self, data_manager):
-        self.model.train()
+    def _run_episodes(self, manager, episodes: int, train: bool) -> Tuple[float, float]:
+        total_loss, total_acc = 0, 0
+        self.model.train(train)
 
-        train_loader, test_loader, _ = data_manager.get_eval_task(train_classes=True)
-        loss = 0
+        for episode in range(episodes):
+            task_data = manager.get_eval_task(train_classes=train)
+            loss, acc = self._train_step(task_data) if train else self._val_step(task_data)
+            total_loss += loss
+            total_acc += acc
+            print(f'{"Training" if train else "Validation"} {episode + 1}/{episodes}', end='\r')
+
+        return total_loss / episodes, total_acc / episodes
+
+    def _train_step(self, task_data) -> Tuple[float, float]:
+        train_loader, test_loader, _ = task_data
+        (train_imgs, train_labels), (query_imgs, query_labels) = next(zip(train_loader, test_loader))
         
-        for train_batch, query_batch in zip(train_loader, test_loader):
-            # this loop iterates only once because len(train_loader) == len(test_loader) == 1
-            train_imgs, train_labels = train_batch
-            query_imgs, query_labels = query_batch
+        train_imgs, train_labels = train_imgs.to(self.device), train_labels.to(self.device)
+        query_imgs, query_labels = query_imgs.to(self.device), query_labels.to(self.device)
 
-            train_imgs, train_labels = train_imgs.to(self.device), train_labels.to(self.device)
-            query_imgs, query_labels = query_imgs.to(self.device), query_labels.to(self.device)
-            
-            self.optimizer.zero_grad()
+        self.optimizer.zero_grad()
 
-            if self.model.__class__.__name__ == 'FEAT':
-                scores, reg = self.model(train_imgs, train_labels, query_imgs, query_labels)
-                loss = self.criterion(scores, query_labels.argmax(1)) 
+        loss, scores = self.evaluate(train_imgs, train_labels, query_imgs, query_labels)
 
-                all_labels = torch.cat([train_labels, query_labels], dim=0)
-                loss += self.model.temperature * self.criterion(reg, all_labels)
-            else:
-                scores = self.model(train_imgs, train_labels, query_imgs)
-                loss = self.criterion(scores, query_labels.argmax(1))
-            
-            l2_reg = sum(torch.norm(param) for param in self.model.parameters())
-            loss += 1e-4 * l2_reg
+        loss.backward()
+        self.optimizer.step()
 
-            loss.backward()
-            self.optimizer.step()
+        acc = (scores.argmax(1) == query_labels.argmax(1)).float().mean()
+        return loss.item(), acc.item()
 
-            acc = (scores.argmax(1) == query_labels.argmax(1)).float().mean()
+    def _val_step(self, task_data) -> Tuple[float, float]:
+        train_loader, test_loader, _ = task_data
+        (train_imgs, train_labels), (test_imgs, test_labels) = next(zip(train_loader, test_loader))
+
+        train_imgs, train_labels = train_imgs.to(self.device), train_labels.to(self.device)
+        test_imgs, test_labels = test_imgs.to(self.device), test_labels.to(self.device)
+
+        with torch.no_grad():
+            loss, scores = self.evaluate(train_imgs, train_labels, test_imgs, test_labels)
+            acc = (scores.argmax(1) == test_labels.argmax(1)).float().mean()
 
         return loss.item(), acc.item()
 
-    def validate(self, data_manager, episodes: int = 400):
+    def validate(self, manager, episodes: int = 400) -> Tuple[float, float]:
         self.model.eval()
+        return self._run_episodes(manager, episodes, train=False)
 
-        n_correct = 0
-        total_loss = 0
+    def _evaluate(self,
+        train_imgs: torch.Tensor,
+        train_labels: torch.Tensor,
+        query_imgs: torch.Tensor,
+        query_labels: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        
+        scores = self.model(train_imgs, train_labels, query_imgs, query_labels)
+        loss = self.criterion(scores, query_labels.argmax(1))
+        if self.l2_weight:
+            loss += self.l2_weight * sum(torch.norm(p) for p in self.model.parameters())
 
-        with torch.no_grad():
-            for episode in range(episodes):
-                train_loader, test_loader, _ = data_manager.get_eval_task(train_classes=False)
+        return loss, scores
 
-                for train_batch, test_batch in zip(train_loader, test_loader):
-                    # this loop iterates only once because len(train_loader) == len(test_loader) == 1
-                    train_imgs, train_labels = train_batch
-                    test_imgs, test_labels = test_batch
+    def _evaluate_contrastive(self,
+        train_imgs: torch.Tensor,
+        train_labels: torch.Tensor,
+        query_imgs: torch.Tensor,
+        query_labels: torch.Tensor,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        
+        scores, reg = self.model(train_imgs, train_labels, query_imgs, query_labels)
+        loss = self.criterion(scores, query_labels.argmax(1))
+        loss += self.model.temperature * self.criterion(reg, torch.cat([train_labels, query_labels]))
+        if self.l2_weight:
+            loss += self.l2_weight * sum(torch.norm(p) for p in self.model.parameters())
 
-                    train_imgs, train_labels = train_imgs.to(self.device), train_labels.to(self.device)
-                    test_imgs, test_labels = test_imgs.to(self.device), test_labels.to(self.device)
-
-                    scores = self.model(train_imgs, train_labels, test_imgs, test_labels)
-                    if isinstance(scores, tuple): # if using FEAT ignore regularization 
-                        scores = scores[0]
-
-                    total_loss += self.criterion(scores, test_labels.argmax(1))
-                    l2_reg = sum(torch.norm(param) for param in self.model.parameters())
-                    total_loss += 1e-4 * l2_reg
-
-                    n_correct += (scores.argmax(1) == test_labels.argmax(1)).sum().item()
-                
-                print(f'Validation {episode + 1}/{episodes}', end='\r')
-
-        n_total = len(test_labels) * episodes
-        acc = n_correct / n_total
-        total_loss = total_loss / episodes
-
-        return total_loss, acc
+        return loss, scores
 
 
 
