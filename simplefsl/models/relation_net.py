@@ -28,7 +28,7 @@ class ConvRelationModule(nn.Module):
         return self.fc(x)
 
 
-class RelationNetwork(nn.Module):
+class RelationNetworks(nn.Module):
     def __init__(self, backbone: nn.Module):
         super().__init__()
         self.backbone = backbone
@@ -36,9 +36,9 @@ class RelationNetwork(nn.Module):
 
     def forward(
         self,
-        support_images: torch.Tensor,     # [num_support, C, H, W]
-        support_labels: torch.Tensor,     # [num_support, ways] (one-hot)
-        query_images: torch.Tensor,       # [query, C, H, W]
+        support_images: torch.Tensor,    
+        support_labels: torch.Tensor,    
+        query_images: torch.Tensor,
         *args
     ) -> torch.Tensor:
 
