@@ -12,7 +12,7 @@ class FewShotBRSET(Dataset):
         self.img_ids = img_ids
         self.transforms = transforms
         self.labels = labels
-        self.img_dir = 'data/imgs'
+        self.img_dir = './BRSET/data/imgs'
     
     def __len__(self):
         return len(self.img_ids)
@@ -39,7 +39,7 @@ class BRSETManager():
         self.n_shots = n_shots
         self.n_ways = n_ways
         self.augment = augment
-        self.data = pd.read_csv('data/clean.csv')
+        self.data = pd.read_csv('./BRSET/data/clean.csv')
         self.batch_size = batch_size
         self.mean = mean
         self.std = std
