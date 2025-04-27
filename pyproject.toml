@@ -1,0 +1,19 @@
+[project]
+name = "simplefsl"  
+version = "0.1.0" 
+description = "A Python Library for Few-Shot Learning Models"
+readme = "README.md"
+keywords = ["meta learning", "few shot learning", "image classification"]
+authors = [{ name = "Victor Nascimento Ribeiro", email = "victor_nascimento@usp.br" }]
+dependencies = [
+    "torch",           
+    "pandas",         
+    "torchvision",  
+    "scikit-learn", 
+    "timm",        
+    "qpth",         
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
