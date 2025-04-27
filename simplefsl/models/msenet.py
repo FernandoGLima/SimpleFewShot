@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from timm.models.features import FeatureListNet
+from timm.models import FeatureListNet
 
 # MSENet: Multi-Scale Enhanced Network
 # https://arxiv.org/abs/2409.07989v2
