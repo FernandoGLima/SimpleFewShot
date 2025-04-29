@@ -38,7 +38,7 @@ class Trainer:
             train_logs.append((epoch + 1, loss, acc))
             print(f"Epoch {epoch + 1} - Loss: {loss:.3f} - Acc: {acc:.2f} - Time: {time.time() - epoch_start:.0f}s")
 
-            if validate_every >= 0 and (epoch + 1) % validate_every == 0:
+            if validate_every > 0 and (epoch + 1) % validate_every == 0:
                 val_start = time.time()
                 val_loss, val_acc = self.validate(manager, val_episodes)
                 val_logs.append((epoch + 1, val_loss, val_acc))
@@ -125,3 +125,15 @@ class Trainer:
     
         return train_imgs, train_labels, test_imgs, test_labels
 
+    def save_checkpoint(self, path: str):
+        torch.save({
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
+        }, path)
+        print(f"Checkpoint saved to {path}")
+        
+    def load_checkpoint(self, path: str):   
+        checkpoint = torch.load(path)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        print(f"Checkpoint loaded from {path}")
