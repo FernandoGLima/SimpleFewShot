@@ -1,53 +1,90 @@
+import argparse
 import timm
 import torch
 
 from simplefsl.datasets.manager import BRSETManager
-from simplefsl.models.tadam import TADAM as Method
 from simplefsl.trainer import Trainer
 from simplefsl.utils import seed_everything, get_model_loss
 
-TRAINING_CLASSES = ['diabetic_retinopathy',
-                        'scar', 'amd', 'hypertensive_retinopathy', 'drusens', 
-                        'myopic_fundus', 'increased_cup_disc', 'other']
-TEST_CLASSES = ['hemorrhage', 'vascular_occlusion', 'nevus', 'healthy']
+def import_model(model: str):
+    global Method  
+    if model == 'dn4':
+        from simplefsl.models.dn4 import DN4 as Method
+    elif model == 'feat':
+        from simplefsl.models.feat import FEAT as Method
+    elif model == 'matching_net':
+        from simplefsl.models.matching_net import MatchingNetworks as Method
+    elif model == 'metaopt_net':
+        from simplefsl.models.metaopt_net import MetaOptNet as Method
+    elif model == 'msenet':
+        from simplefsl.models.msenet import MSENet as Method
+    elif model == 'proto_net':
+        from simplefsl.models.proto_net import PrototypicalNetworks as Method
+    elif model == 'relation_net':
+        from simplefsl.models.relation_net import RelationNetworks as Method
+    elif model == 'tadam':
+        from simplefsl.models.tadam import TADAM as Method
+    elif model == 'tapnet':
+        from simplefsl.models.tapnet import TAPNet as Method
+    else:
+        raise ValueError(f"Unsupported model type: {model}")
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-device
+def main(model: str, ways: int, shots: int, gpu: int):
+    import_model(model)
 
-seed = 42
-seed_everything(seed)
+    seed = 42
+    backbone_name = 'resnet50.a3_in1k'
+    episodes = 500
+    epochs = 20
+    validate_every = 2
 
-ways = 2
-shots = 5
-model_type = 'resnet50.a3_in1k'
+    TRAINING_CLASSES = [
+        'diabetic_retinopathy', 'scar', 'amd', 'hypertensive_retinopathy',
+        'drusens', 'myopic_fundus', 'increased_cup_disc', 'other'
+    ]
+    TEST_CLASSES = ['hemorrhage', 'vascular_occlusion', 'nevus', 'healthy']
 
-batch_size = ways*shots
+    # setup
+    seed_everything(seed)
+    device = torch.device(f"cuda:{gpu}" if torch.cuda.is_available() else "cpu")
 
-backbone = timm.create_model(model_type, pretrained=True)
-backbone.reset_classifier(num_classes=0) 
-model = Method(backbone).to(device)
+    # model
+    backbone = timm.create_model(backbone_name, pretrained=True)
+    backbone.reset_classifier(num_classes=0)
+    model = Method(backbone).to(device)
+
+    # data manager
+    if backbone_name in ["resnet50.a3_in1k", "swin_s3_tiny_224.ms_in1k"]:
+        mean_val, std = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
+    elif backbone_name == "vit_small_patch32_224.augreg_in21k_ft_in1k":
+        mean_val, std = (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
+    else:
+        raise ValueError(f"Unsupported model type: {backbone_name}")
+
+    manager = BRSETManager(
+        TRAINING_CLASSES, TEST_CLASSES, shots, ways, mean_val, std,
+        augment=None, batch_size=ways * shots, seed=seed
+    )
+
+    # training
+    criterion = get_model_loss(model)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    trainer = Trainer(model, criterion, optimizer)
+    # trainer.load_checkpoint('model.pth')
+
+    print(f'training {model.__class__.__name__} with {ways}-way-{shots}-shot on {backbone_name}')
+    trainer.train(manager, epochs, episodes, validate_every)
+
+    # trainer.save_checkpoint('model.pth')
 
 
-if model_type == "resnet50.a3_in1k" or model_type == "swin_s3_tiny_224.ms_in1k": 
-    mean_val, std = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
-elif model_type == "vit_small_patch32_224.augreg_in21k_ft_in1k":
-    mean_val, std = (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
-
-
-manager = BRSETManager(TRAINING_CLASSES, TEST_CLASSES, shots, ways, mean_val, std, 
-                       augment=None, batch_size=batch_size, seed=seed)
-
-
-criterion = get_model_loss(model)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-
-episodes = 500
-epochs = 20
-validate_every = 2
-
-print(f'training {model_type} on {ways} ways, {shots} shots')
-trainer = Trainer(model, criterion, optimizer)
-
-trainer.train(manager, epochs, episodes, validate_every)
-
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Train Few-Shot Learning model.")
+    parser.add_argument('--ways', type=int, default=2, help='Number of classes per episode (N-way)')
+    parser.add_argument('--shots', type=int, default=5, help='Number of examples per class (K-shot)')
+    parser.add_argument('--gpu', type=int, default=0, help='GPU ID to use (default: 0)')
+    parser.add_argument('--model', type=str, required=True, help='Model name')
+    
+    args = parser.parse_args()
+    main(args.model, args.ways, args.shots, args.gpu)
