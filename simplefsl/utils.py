@@ -6,24 +6,24 @@ import torch.nn as nn
 
 def get_model_loss(model: nn.Module) -> nn.Module:
     loss_map = {
-            "DN4": nn.CrossEntropyLoss(),
-            "FEAT": nn.CrossEntropyLoss(),
-            "MatchingNetworks": nn.CrossEntropyLoss(),
-            "MetaOptNet": nn.CrossEntropyLoss(),
-            "MSENet": nn.MSELoss(),
-            "PrototypicalNetworks": nn.CrossEntropyLoss(),
-            "RelationNetworks": nn.MSELoss(),
-            "TADAM": nn.CrossEntropyLoss(),
-            "TapNet": nn.CrossEntropyLoss(),
-        }
+        "DN4": nn.CrossEntropyLoss(),
+        "FEAT": nn.CrossEntropyLoss(),
+        "MatchingNetworks": nn.NLLLoss(),
+        "MetaOptNet": nn.CrossEntropyLoss(),
+        "MSENet": nn.CrossEntropyLoss(),
+        "PrototypicalNetworks": nn.CrossEntropyLoss(),
+        "RelationNetworks": nn.MSELoss(),
+        "TADAM": nn.CrossEntropyLoss(),
+        "TapNet": nn.CrossEntropyLoss(),
+    }
     
     model_name = model.__class__.__name__
     try:
         return loss_map[model_name]
-    except KeyError:
-        raise ValueError(
-            f"Unknown model_name {model_name!r}\nAvailable options: {list(loss_map.keys())}"
-        )
+    except:
+        print(f"Model {model_name} not found in loss map. Using default CrossEntropyLoss")
+        return nn.CrossEntropyLoss()
+       
     
 def seed_everything(seed : int):
     random.seed(seed)
