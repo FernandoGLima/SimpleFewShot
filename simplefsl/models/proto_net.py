@@ -23,15 +23,15 @@ class PrototypicalNetworks(nn.Module):
         z_support = self.backbone.forward(support_images)
         z_query = self.backbone.forward(query_images)
 
-        ways = support_labels.shape[1] 
-
         # compute prototype
+        ways = support_labels.shape[1] 
         support_labels = support_labels.argmax(1) 
         z_proto = torch.cat([
-                z_support[torch.nonzero(support_labels == label)].mean(0)
-                for label in range(ways)
-            ]) # shape: [ways, hdim]
+            z_support[torch.nonzero(support_labels == label)].mean(0)
+            for label in range(ways)
+        ]) # [ways, hdim]
 
-        scores = -torch.cdist(z_query, z_proto) 
+        # compute distances
+        logits = -torch.cdist(z_query, z_proto) 
 
-        return F.softmax(scores, dim=1)
+        return logits

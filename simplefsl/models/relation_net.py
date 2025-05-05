@@ -66,4 +66,4 @@ class RelationNetworks(nn.Module):
         relations = self.relation_module(relation_pairs) # [query * ways, 1]
         relations = relations.view(query, ways) # [query, ways]
 
-        return F.softmax(relations, dim=1)
+        return relations

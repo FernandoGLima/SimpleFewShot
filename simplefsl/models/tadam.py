@@ -88,8 +88,9 @@ class TADAM(nn.Module):
         z_query = self._extract_film_features(query_images, gammas, betas)
 
         # compute similarity scores
-        scores = -self.scale * torch.cdist(z_query, z_proto)
-        return F.softmax(scores, dim=1)
+        logits = -self.scale * torch.cdist(z_query, z_proto)
+        
+        return logits
 
     def _extract_film_features(self, 
         x: torch.Tensor, 

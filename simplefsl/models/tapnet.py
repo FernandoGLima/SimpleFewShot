@@ -64,9 +64,9 @@ class TapNet(nn.Module):
         ]) # [ways, proj_dim]
 
         # compute similarity scores
-        scores = -torch.cdist(z_query_proj, z_proto)  # [n_query, n_way]
+        logits = -torch.cdist(z_query_proj, z_proto)  # [n_query, n_way]
 
-        return F.softmax(scores, dim=1)
+        return logits
 
     def _project_features(self, features: torch.Tensor, proj_matrix: torch.Tensor) -> torch.Tensor:
         proj_features = torch.matmul(features, proj_matrix.squeeze(0).T)  

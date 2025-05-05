@@ -66,7 +66,7 @@ class MSENet(nn.Module):
         ways = support_labels.shape[1]
         support_labels = support_labels.argmax(1)
 
-        scores = 0
+        logits = 0
         for support, query, w, attn in zip(z_support, z_query, self.weights, self.attn_blocks): 
             support = attn(support) # [ways*shot, c, h, w]
             query = attn(query) # [ways, c, h, w]
@@ -80,6 +80,6 @@ class MSENet(nn.Module):
             ]) # shape: [ways, hdim]
 
             dist = -torch.cdist(query, proto) # [query, ways]
-            scores += w * dist
+            logits += w * dist
         
-        return scores
+        return logits
