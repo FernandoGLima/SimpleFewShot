@@ -45,6 +45,7 @@ class Trainer:
                 print(f"Validation - Loss: {val_loss:.3f} - Acc: {val_acc:.2f} - Time: {time.time() - val_start:.0f}s\n")
 
         print(f'Training completed in {time.time() - start_time:.0f}s')
+        print(f'Best validation acc: {max(val_logs, key=lambda x: x[2])[2]:.2f} at epoch {max(val_logs, key=lambda x: x[2])[0]}')
         return train_logs, val_logs
 
     def _run_episodes(self, manager, episodes: int, train: bool) -> Tuple[float, float]:
@@ -52,7 +53,7 @@ class Trainer:
         self.model.train(train)
 
         for episode in range(episodes):
-            task_data = manager.get_eval_task(train_classes=train)
+            task_data = manager.get_fewshot_task(train)
             loss, acc = self._train_step(task_data) if train else self._val_step(task_data)
             total_loss += loss
             total_acc += acc
@@ -93,7 +94,9 @@ class Trainer:
         scores = self.model(train_imgs, train_labels, query_imgs, query_labels)
         acc = (scores.argmax(1) == query_labels.argmax(1)).float().mean()
 
-        loss = self.criterion(scores, query_labels.argmax(1))
+        query_labels = query_labels.float() if isinstance(self.criterion, torch.nn.MSELoss) else query_labels.argmax(1)
+        loss = self.criterion(scores, query_labels)
+
         if self.l2_weight:
             loss += self.l2_weight * sum(torch.norm(p) for p in self.model.parameters())
 

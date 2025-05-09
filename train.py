@@ -2,7 +2,7 @@ import argparse
 import timm
 import torch
 
-from simplefsl.datasets.manager import BRSETManager
+from simplefsl.data.manager import FewShotManager, FewShotBRSET
 from simplefsl.trainer import Trainer
 from simplefsl.utils import seed_everything, get_model_loss
 
@@ -25,7 +25,7 @@ def import_model(model: str):
     elif model == 'tadam':
         from simplefsl.models.tadam import TADAM as Method
     elif model == 'tapnet':
-        from simplefsl.models.tapnet import TAPNet as Method
+        from simplefsl.models.tapnet import TapNet as Method
     else:
         raise ValueError(f"Unsupported model type: {model}")
 
@@ -36,14 +36,8 @@ def main(model: str, ways: int, shots: int, gpu: int):
     seed = 42
     backbone_name = 'resnet50.a3_in1k'
     episodes = 500
-    epochs = 20
+    epochs = 40
     validate_every = 2
-
-    TRAINING_CLASSES = [
-        'diabetic_retinopathy', 'scar', 'amd', 'hypertensive_retinopathy',
-        'drusens', 'myopic_fundus', 'increased_cup_disc', 'other'
-    ]
-    TEST_CLASSES = ['hemorrhage', 'vascular_occlusion', 'nevus', 'healthy']
 
     # setup
     seed_everything(seed)
@@ -54,22 +48,13 @@ def main(model: str, ways: int, shots: int, gpu: int):
     backbone.reset_classifier(num_classes=0)
     model = Method(backbone).to(device)
 
-    # data manager
-    if backbone_name in ["resnet50.a3_in1k", "swin_s3_tiny_224.ms_in1k"]:
-        mean_val, std = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
-    elif backbone_name == "vit_small_patch32_224.augreg_in21k_ft_in1k":
-        mean_val, std = (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
-    else:
-        raise ValueError(f"Unsupported model type: {backbone_name}")
-
-    manager = BRSETManager(
-        TRAINING_CLASSES, TEST_CLASSES, shots, ways, mean_val, std,
-        augment=None, batch_size=ways * shots, seed=seed
-    )
+    data_path = '/home/victornasc/Metodos-FSL/BRSET/data/imgs'
+    label_path = '/home/victornasc/Metodos-FSL/BRSET/data/clean.csv'
+    manager = FewShotManager(FewShotBRSET, data_path, label_path, ways, shots, backbone_name, seed=seed)
 
     # training
     criterion = get_model_loss(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     trainer = Trainer(model, criterion, optimizer)
     # trainer.load_checkpoint('model.pth')
 

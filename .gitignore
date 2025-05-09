@@ -71,7 +71,6 @@ htmlcov/
 *.swo
 
 # Machine learning and datasets
-data/
 *.csv
 *.h5
 *.json
@@ -104,3 +103,4 @@ desktop.ini
 # Other ignored files
 *.bak
 *.orig
+*.sh
