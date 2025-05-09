@@ -72,9 +72,10 @@ class FewShotManager():
     
     @staticmethod
     def _get_mean_std(backbone_name: str):
-        if 'resnet' in backbone_name or 'swin' in backbone_name:
+        name = backbone_name.lower()
+        if 'resnet' in name or 'swin' in name:
             mean, std = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
-        elif 'vit' in backbone_name:
+        elif 'vit' in name:
             mean, std = (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
         else:
             print(f"Backbone {backbone_name} not supported. Using mean = 0 and std = 1")
