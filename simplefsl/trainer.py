@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import time
+from tqdm import tqdm
+
 from typing import Tuple, List
 
 class Trainer:
@@ -52,12 +54,12 @@ class Trainer:
         total_loss, total_acc = 0.0, 0.0
         self.model.train(train)
 
-        for episode in range(episodes):
+        for _ in tqdm(range(episodes), desc="Training" if train else "Validation", leave=False):
             task_data = manager.get_fewshot_task(train)
             loss, acc = self._train_step(task_data) if train else self._val_step(task_data)
             total_loss += loss
             total_acc += acc
-            print(f'{"Training" if train else "Validation"} {episode + 1}/{episodes}', end='\r')
+
 
         return total_loss / episodes, total_acc / episodes
 
