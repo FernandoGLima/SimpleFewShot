@@ -1,5 +1,11 @@
 
-# Simple Few Shot 
+![ing](assets/logo.png)
+
+[![PyPI](https://img.shields.io/pypi/v/simplefsl?label=simplefsl&logo=python&style=for-the-badge)](https://pypi.org/project/simplefsl)
+[![Colab](https://img.shields.io/badge/Open%20In-Colab-FFD43B?logo=googlecolab&logoColor=black&style=for-the-badge)](https://colab.research.google.com/drive/11m4Dbvgpnm4HVaGsuaXE-mjwuaPY30Ik?usp=sharing)
+
+
+## Overview
 
 A modular library for **few-shot learning**, implementing classic and state-of-the-art meta-learning algorithms
 
@@ -37,7 +43,7 @@ pip install git+https://github.com/victor-nasc/SimpleFewShot.git
 
 A ready-to-run Colab example is available:
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/victor-nasc/SimpleFewShot/blob/main/examples/usage_example.ipynb)
+[![Colab](https://img.shields.io/badge/Open%20In-Colab-FFD43B?logo=googlecolab&logoColor=black&style=for-the-badge)](https://colab.research.google.com/drive/11m4Dbvgpnm4HVaGsuaXE-mjwuaPY30Ik?usp=sharing)
 
 ## Custom Dataset Format
 
