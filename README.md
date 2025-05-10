@@ -1,12 +1,65 @@
-```
+
+# Simple Few Shot 
+
+A modular library for **few-shot learning**, implementing classic and state-of-the-art meta-learning algorithms
+
+It's designed to be flexible, extensible, and easy to integrate into your research or production pipeline
+
+- Plug-and-play support for multiple few-shot learning models
+- Episodic training and evaluation setup
+- Clean dataset interface for custom datasets
+- Support for custom backbones like **ResNet**, **ViT**, and more
+- Built-in data augmentation options (`basic`, `mixup`, `cutmix`)
+
+## Available Models
+
+| Model           | Paper Reference |
+|-----------------|-----------------|
+| **ProtoNet**    | [https://arxiv.org/abs/1703.05175](https://arxiv.org/abs/1703.05175) |
+| **RelationNet** | [https://arxiv.org/abs/1711.06025](https://arxiv.org/abs/1711.06025) |
+| **MatchingNet** | [https://arxiv.org/abs/1606.04080](https://arxiv.org/abs/1606.04080) |
+| **MetaOptNet**  | [https://arxiv.org/abs/1904.03758](https://arxiv.org/abs/1904.03758) |
+| **TapNet**      | [https://arxiv.org/abs/1905.06549](https://arxiv.org/abs/1905.06549) |
+| **TADAM**       | [https://arxiv.org/abs/1805.10123](https://arxiv.org/abs/1805.10123) |
+| **DN4**         | [https://arxiv.org/abs/1903.12290](https://arxiv.org/abs/1903.12290) |
+| **MSENet**      | [https://arxiv.org/abs/2409.07989v2](https://arxiv.org/abs/2409.07989v2) |
+| **FEAT**        | [https://arxiv.org/abs/1812.03664](https://arxiv.org/abs/1812.03664) |
+
+All models are implemented as separate `.py` files under the ![models/](/simplefsl/models) directory
+
+## Getting Started
+
+Install the package directly from GitHub:
+
+```bash
 pip install git+https://github.com/victor-nasc/SimpleFewShot.git
 ```
 
-# TODO
-- add other methods: reptile, surf, carlos, ...
-- update data manager (do not mention BRSEt, remove unecessary functions)
-- make a colab notebook as example (based on train.py)
-- modularize the train.py (remove hardcoded stuff + add parser) maybe this script wont be in the final version... If colab notebook works fine we dont need this script
-- add tutorial about how to configure the `csv` file for custom data
-- should gradcam be in this repo???
-- Create beautiful and complete README. Can we get a logo such as [BasicSR](https://github.com/XPixelGroup/BasicSR/)? try using AI for it
+A ready-to-run Colab example is available:
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/victor-nasc/SimpleFewShot/blob/main/examples/usage_example.ipynb)
+
+## Custom Dataset Format
+
+To use a custom dataset, provide a `.csv` file with the following structure:
+
+- `image_id`: Path to the image file
+- One column per class (binary: 1 if image belongs to class, 0 otherwise)
+
+**Example:**
+
+| idx | image_id        | class1 | class2 | class3 | class3 |
+|-----|-----------------|--------|--------|--------|--------|
+| 1   | /data/img1.jpg  | 1      | 0      | 0      | 0      |
+| 2   | /data/img2.jpg  | 0      | 1      | 0      | 0      |
+| 3   | /data/img3.jpg  | 0      | 0      | 1      | 0      |
+| ... | ...  | ...      | ...      | ...     | ...    |
+
+You can define your training and test class splits programmatically using the `FewShotManager` class
+
+## Citation
+
+If you find this library useful in your research or project, please consider citing:
+```
+...
+```
