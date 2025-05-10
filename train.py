@@ -2,7 +2,7 @@ import argparse
 import timm
 import torch
 
-from simplefsl.data.manager import FewShotManager, FewShotBRSET
+from simplefsl.data.manager import FewShotManager
 from simplefsl.trainer import Trainer
 from simplefsl.utils import seed_everything, get_model_loss
 
@@ -48,9 +48,21 @@ def main(model: str, ways: int, shots: int, gpu: int):
     backbone.reset_classifier(num_classes=0)
     model = Method(backbone).to(device)
 
-    data_path = '/home/victornasc/Metodos-FSL/BRSET/data/imgs'
-    label_path = '/home/victornasc/Metodos-FSL/BRSET/data/clean.csv'
-    manager = FewShotManager(FewShotBRSET, data_path, label_path, ways, shots, backbone_name, seed=seed)
+    label_path = '/home/victornasc/Metodos-FSL/BRSET/data/clean1.csv'
+    train_classes = [
+        'diabetic_retinopathy', 'scar', 'amd', 'hypertensive_retinopathy',
+        'drusens', 'myopic_fundus', 'increased_cup_disc', 'other'
+    ]
+    test_classes = ['hemorrhage', 'vascular_occlusion', 'nevus', 'healthy']
+
+    manager = FewShotManager(label_path, 
+                             train_classes, 
+                             test_classes, 
+                             ways, 
+                             shots, 
+                             backbone_name, 
+                             augment=None,
+                             seed=seed)
 
     # training
     criterion = get_model_loss(model)
