@@ -54,16 +54,16 @@ To use a custom dataset, provide a `.csv` file with the following structure:
 
 **Example:**
 
-| idx | image_id        | class1 | class2 | class3 | class3 |
-|-----|-----------------|--------|--------|--------|--------|
-| 1   | `/data/img1.jpg`  | 1      | 0      | 0      | 0      |
-| 2   | `/data/img2.jpg` | 0      | 1      | 0      | 0      |
-| 3   | `/data/img3.jpg`  | 0      | 0      | 1      | 0      |
-| ... | ...  | ...      | ...      | ...     | ...    |
+| idx | image_id         | class1 | class2 | class3 |
+|-----|------------------|--------|--------|--------|
+| 1   | `/data/img1.jpg` | 1      | 0      | 0      | 
+| 2   | `/data/img2.jpg` | 0      | 1      | 0      | 
+| 3   | `/data/img3.jpg` | 0      | 0      | 1      |
+| ... | ...              | ...    | ...    | ...    | 
 
 You can define your training and test class splits programmatically using the `FewShotManager` class
 
-Obs.: This method supports **multi-labeled** datasets
+Obs.: This method supports also **multi-labeled** datasets
 
 ## Citation
 
