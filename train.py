@@ -30,7 +30,7 @@ def import_model(model: str):
         raise ValueError(f"Unsupported model type: {model}")
 
 
-def main(model: str, ways: int, shots: int, gpu: int):
+def main(model: str, ways: int, shots: int, gpu: int, lr: float, l2_weight: float):
     import_model(model)
 
     seed = 42
@@ -66,8 +66,8 @@ def main(model: str, ways: int, shots: int, gpu: int):
 
     # training
     criterion = get_model_loss(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    trainer = Trainer(model, criterion, optimizer)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    trainer = Trainer(model, criterion, optimizer, l2_weight=l2_weight)
     # trainer.load_checkpoint('model.pth')
 
     print(f'training {model.__class__.__name__} with {ways}-way-{shots}-shot on {backbone_name}')
@@ -82,6 +82,8 @@ if __name__ == "__main__":
     parser.add_argument('--shots', type=int, default=5, help='Number of examples per class (K-shot)')
     parser.add_argument('--gpu', type=int, default=0, help='GPU ID to use (default: 0)')
     parser.add_argument('--model', type=str, required=True, help='Model name')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate (default: 0.001)')
+    parser.add_argument('--l2_weight', type=float, default=0.0001, help='L2 regularization term (default: 0.0001)')
     
     args = parser.parse_args()
-    main(args.model, args.ways, args.shots, args.gpu)
+    main(args.model, args.ways, args.shots, args.gpu, args.lr, args.l2_weight)
