@@ -65,6 +65,27 @@ You can define your training and test class splits programmatically using the `F
 
 Obs.: This method supports also **multi-labeled** datasets
 
+## Training a model
+
+In order to train a model with your data, run:
+
+```bash
+python3 train.py \
+  --model <model_name> \
+  --ways <number_of_classes_per_task> \
+  --shots <number_of_examples_per_class_per_task> \
+  --gpu <which_gpu_to_run> \
+  --lr <lr_value> \
+  --l2_weight <l2_weight_value>
+```
+
+<!-- 
+Colocar também o nome possível dos modelos a serem selecionados?
+Setar valores padrão caso algum parâmetro não seja enviado?
+Ex: GPU = 0, lr = 0.001, etc.
+-->
+
+
 ## Citation
 
 If you find this library useful in your research or project, please consider citing:
