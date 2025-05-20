@@ -1,5 +1,5 @@
 
-![ing](assets/logo.png)
+![Simple Few Shot](assets/logo.png)
 
 [![PyPI](https://img.shields.io/pypi/v/simplefsl?label=simplefsl&logo=python&style=for-the-badge)](https://pypi.org/project/simplefsl)
 [![Colab](https://img.shields.io/badge/Open%20In-Colab-FFD43B?logo=googlecolab&logoColor=black&style=for-the-badge)](https://colab.research.google.com/drive/11m4Dbvgpnm4HVaGsuaXE-mjwuaPY30Ik?usp=sharing)
@@ -31,7 +31,7 @@ It's designed to be flexible, extensible, and easy to integrate into your resear
 | **MSENet**      | [https://arxiv.org/abs/2409.07989v2](https://arxiv.org/abs/2409.07989v2) |
 | **FEAT**        | [https://arxiv.org/abs/1812.03664](https://arxiv.org/abs/1812.03664) |
 
-All models are implemented as separate `.py` files under the ![models/](/simplefsl/models) directory
+All models are implemented as separate `.py` files under the [models/](/simplefsl/models) directory
 
 ## Getting Started
 
