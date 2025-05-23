@@ -1,5 +1,5 @@
 
-![ing](assets/logo.png)
+![Simple Few Shot](assets/logo.png)
 
 [![PyPI](https://img.shields.io/pypi/v/simplefsl?label=simplefsl&logo=python&style=for-the-badge)](https://pypi.org/project/simplefsl)
 [![Colab](https://img.shields.io/badge/Open%20In-Colab-FFD43B?logo=googlecolab&logoColor=black&style=for-the-badge)](https://colab.research.google.com/drive/11m4Dbvgpnm4HVaGsuaXE-mjwuaPY30Ik?usp=sharing)
@@ -19,19 +19,22 @@ It's designed to be flexible, extensible, and easy to integrate into your resear
 
 ## Available Models
 
-| Model           | Paper Reference |
-|-----------------|-----------------|
-| **ProtoNet**    | [https://arxiv.org/abs/1703.05175](https://arxiv.org/abs/1703.05175) |
-| **RelationNet** | [https://arxiv.org/abs/1711.06025](https://arxiv.org/abs/1711.06025) |
-| **MatchingNet** | [https://arxiv.org/abs/1606.04080](https://arxiv.org/abs/1606.04080) |
-| **MetaOptNet**  | [https://arxiv.org/abs/1904.03758](https://arxiv.org/abs/1904.03758) |
-| **TapNet**      | [https://arxiv.org/abs/1905.06549](https://arxiv.org/abs/1905.06549) |
-| **TADAM**       | [https://arxiv.org/abs/1805.10123](https://arxiv.org/abs/1805.10123) |
-| **DN4**         | [https://arxiv.org/abs/1903.12290](https://arxiv.org/abs/1903.12290) |
-| **MSENet**      | [https://arxiv.org/abs/2409.07989v2](https://arxiv.org/abs/2409.07989v2) |
-| **FEAT**        | [https://arxiv.org/abs/1812.03664](https://arxiv.org/abs/1812.03664) |
+The following model results are based on the original papers, evaluated on Mini-Imagenet, using 5-way 5-shot tasks.
 
-All models are implemented as separate `.py` files under the ![models/](/simplefsl/models) directory
+| Model           | Paper Reference                                                                  | Input parameter name | [Mini-imagenet accuracy (%)](https://paperswithcode.com/sota/few-shot-image-classification-on-mini-3) |
+|-----------------|----------------------------------------------------------------------------------|----------------------|-------------------------------------------------------------|
+| **ProtoNet**    | [https://arxiv.org/abs/1703.05175](https://arxiv.org/abs/1703.05175)             | proto_net            | 68.20                                                       |
+| **RelationNet** | [https://arxiv.org/abs/1711.06025](https://arxiv.org/abs/1711.06025)             | relation_net         | 65.32                                                       |
+| **MatchingNet** | [https://arxiv.org/abs/1606.04080](https://arxiv.org/abs/1606.04080)             | matching_net         | 60                                                          |
+| **MetaOptNet**  | [https://arxiv.org/abs/1904.03758](https://arxiv.org/abs/1904.03758)             | metaopt_net          | 78.63                                                       |
+| **TapNet**      | [https://arxiv.org/abs/1905.06549](https://arxiv.org/abs/1905.06549)             | tapnet               | 76.36                                                       |
+| **TADAM**       | [https://arxiv.org/abs/1805.10123](https://arxiv.org/abs/1805.10123)             | tadam                | 76.7                                                        |
+| **DN4**         | [https://arxiv.org/abs/1903.12290](https://arxiv.org/abs/1903.12290)             | dn4                  | 71.02                                                       |
+| **MSENet**      | [https://arxiv.org/abs/2409.07989v2](https://arxiv.org/abs/2409.07989v2)         | msenet               | 84.42                                                       |
+| **FEAT**        | [https://arxiv.org/abs/1812.03664](https://arxiv.org/abs/1812.03664)             | feat                 | 82.05                                                       |
+
+
+All models are implemented as separate `.py` files under the [models/](/simplefsl/models) directory
 
 ## Getting Started
 
@@ -64,6 +67,33 @@ To use a custom dataset, provide a `.csv` file with the following structure:
 You can define your training and test class splits programmatically using the `FewShotManager` class
 
 Obs.: This method supports also **multi-labeled** datasets
+
+## Training a model
+
+In order to train a model with your data, run:
+
+```bash
+python3 train.py \
+  --model <model_name> \
+  --ways <number_of_classes_per_task> \
+  --shots <number_of_examples_per_class_per_task> \
+  --gpu <which_gpu_to_run> \
+  --lr <lr_value> \
+  --l2_weight <l2_weight_value>
+```
+
+Model name is required and should be used as informed on the models table, on the `Input parameter name` column. Standard values for the other parameters are given below:
+
+| ways | shots | gpu | lr     | l2_weight |
+|------|-------|-----|--------|-----------|
+| 2    | 5     | 0   | 0.0001 | 0.0       |
+
+<!-- 
+Talvez colocar os augmentations aqui? 
+O nome do backbone também deve ser parametro?
+  - usar resnet como standard
+-->
+
 
 ## Citation
 
