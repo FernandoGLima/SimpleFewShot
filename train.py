@@ -25,7 +25,15 @@ def import_model(model: str):
     elif model == 'tadam':
         from simplefsl.models.tadam import TADAM as Method
     elif model == 'tapnet':
-        from simplefsl.models.tapnet import TAPNet as Method
+        from simplefsl.models.tapnet import TapNet as Method
+    elif model == 'R2D2':
+        from simplefsl.models.R2D2 import RRNet as Method
+    elif model=='DSN':
+        from simplefsl.models.DSN import DSN as Method
+    elif model=='MetaQDA':
+        from simplefsl.models.MetaQDA import MetaQDA as Method
+    elif model=='NegativeMargin':
+        from simplefsl.models.NegativeMargin import NegativeMargin as Method
     else:
         raise ValueError(f"Unsupported model type: {model}")
 
@@ -36,7 +44,7 @@ def main(model: str, ways: int, shots: int, gpu: int):
     seed = 42
     backbone_name = 'resnet50.a3_in1k'
     episodes = 500
-    epochs = 20
+    epochs = 40
     validate_every = 2
 
     TRAINING_CLASSES = [
@@ -69,7 +77,7 @@ def main(model: str, ways: int, shots: int, gpu: int):
 
     # training
     criterion = get_model_loss(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     trainer = Trainer(model, criterion, optimizer)
     # trainer.load_checkpoint('model.pth')
 
