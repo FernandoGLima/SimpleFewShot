@@ -26,6 +26,14 @@ def import_model(model: str):
         from simplefsl.models.tadam import TADAM as Method
     elif model == 'tapnet':
         from simplefsl.models.tapnet import TapNet as Method
+    elif model == 'R2D2':
+        from simplefsl.models.R2D2 import RRNet as Method
+    elif model=='DSN':
+        from simplefsl.models.DSN import DSN as Method
+    elif model=='MetaQDA':
+        from simplefsl.models.MetaQDA import MetaQDA as Method
+    elif model=='NegativeMargin':
+        from simplefsl.models.NegativeMargin import NegativeMargin as Method
     else:
         raise ValueError(f"Unsupported model type: {model}")
 

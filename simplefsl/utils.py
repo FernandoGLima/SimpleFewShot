@@ -15,6 +15,10 @@ def get_model_loss(model: nn.Module) -> nn.Module:
         "RelationNetworks": nn.MSELoss(),
         "TADAM": nn.CrossEntropyLoss(),
         "TapNet": nn.CrossEntropyLoss(),
+        "R2D2": nn.CrossEntropyLoss(),
+        "DSN": nn.CrossEntropyLoss(),
+        "MetaQDA": nn.CrossEntropyLoss(),
+        "NegativeMargin": nn.CrossEntropyLoss(),
     }
     
     model_name = model.__class__.__name__

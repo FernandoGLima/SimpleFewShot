@@ -7,3 +7,7 @@ from .proto_net import PrototypicalNetworks
 from .relation_net import RelationNetworks
 from .tadam import TADAM
 from .tapnet import TapNet
+from .DSN import DSN
+from .MetaQDA import MetaQDA
+from .NegativeMargin import NegativeMargin
+from .R2D2 import RRNet
