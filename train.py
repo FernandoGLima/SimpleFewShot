@@ -2,7 +2,7 @@ import argparse
 import timm
 import torch
 
-from simplefsl.datasets.manager import BRSETManager
+from simplefsl.data.manager import FewShotManager
 from simplefsl.trainer import Trainer
 from simplefsl.utils import seed_everything, get_model_loss
 
@@ -38,7 +38,7 @@ def import_model(model: str):
         raise ValueError(f"Unsupported model type: {model}")
 
 
-def main(model: str, ways: int, shots: int, gpu: int):
+def main(model: str, ways: int, shots: int, gpu: int, lr: float, l2_weight: float):
     import_model(model)
 
     seed = 42
@@ -46,12 +46,6 @@ def main(model: str, ways: int, shots: int, gpu: int):
     episodes = 500
     epochs = 40
     validate_every = 2
-
-    TRAINING_CLASSES = [
-        'diabetic_retinopathy', 'scar', 'amd', 'hypertensive_retinopathy',
-        'drusens', 'myopic_fundus', 'increased_cup_disc', 'other'
-    ]
-    TEST_CLASSES = ['hemorrhage', 'vascular_occlusion', 'nevus', 'healthy']
 
     # setup
     seed_everything(seed)
@@ -62,23 +56,26 @@ def main(model: str, ways: int, shots: int, gpu: int):
     backbone.reset_classifier(num_classes=0)
     model = Method(backbone).to(device)
 
-    # data manager
-    if backbone_name in ["resnet50.a3_in1k", "swin_s3_tiny_224.ms_in1k"]:
-        mean_val, std = (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
-    elif backbone_name == "vit_small_patch32_224.augreg_in21k_ft_in1k":
-        mean_val, std = (0.5, 0.5, 0.5), (0.5, 0.5, 0.5)
-    else:
-        raise ValueError(f"Unsupported model type: {backbone_name}")
+    label_path = '/home/victornasc/Metodos-FSL/BRSET/data/clean1.csv'
+    train_classes = [
+        'diabetic_retinopathy', 'scar', 'amd', 'hypertensive_retinopathy',
+        'drusens', 'myopic_fundus', 'increased_cup_disc', 'other'
+    ]
+    test_classes = ['hemorrhage', 'vascular_occlusion', 'nevus', 'healthy']
 
-    manager = BRSETManager(
-        TRAINING_CLASSES, TEST_CLASSES, shots, ways, mean_val, std,
-        augment=None, batch_size=ways * shots, seed=seed
-    )
+    manager = FewShotManager(label_path, 
+                             train_classes, 
+                             test_classes, 
+                             ways, 
+                             shots, 
+                             backbone_name, 
+                             augment=None,
+                             seed=seed)
 
     # training
     criterion = get_model_loss(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    trainer = Trainer(model, criterion, optimizer)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    trainer = Trainer(model, criterion, optimizer, l2_weight=l2_weight)
     # trainer.load_checkpoint('model.pth')
 
     print(f'training {model.__class__.__name__} with {ways}-way-{shots}-shot on {backbone_name}')
@@ -93,6 +90,8 @@ if __name__ == "__main__":
     parser.add_argument('--shots', type=int, default=5, help='Number of examples per class (K-shot)')
     parser.add_argument('--gpu', type=int, default=0, help='GPU ID to use (default: 0)')
     parser.add_argument('--model', type=str, required=True, help='Model name')
+    parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate (default: 0.001)')
+    parser.add_argument('--l2_weight', type=float, default=0.0, help='L2 regularization term (default: 0.0001)')
     
     args = parser.parse_args()
-    main(args.model, args.ways, args.shots, args.gpu)
+    main(args.model, args.ways, args.shots, args.gpu, args.lr, args.l2_weight)
