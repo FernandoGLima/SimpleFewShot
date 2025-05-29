@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torch.nn.functional as F
+from typing import Tuple
 
 # FEAT: Few-Shot Image Classification with Feature-Aware Transformer
 # https://arxiv.org/abs/1812.03664
 # Based on the open-source implementation of https://github.com/Sha-Lab/FEAT/
-
 
 class ScaledDotProductAttention(nn.Module):
     ''' Scaled Dot-Product Attention '''
@@ -78,19 +78,14 @@ class MultiHeadAttention(nn.Module):
 class FEAT(nn.Module):
     def __init__(self, 
         backbone: nn.Module,
-        use_euclidean: bool = False,
         temperature: float = 0.1,
     ):
         super().__init__()
         self.backbone = backbone
         self.temperature = temperature
-        self.distance = self._euclidean_distance if use_euclidean else self._cosine_distance
 
         self.hdim = backbone.num_features
         self.slf_attn = MultiHeadAttention(1, self.hdim, self.hdim, self.hdim, dropout=0.5)
-
-    def _euclidean_distance(self, x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
-        return torch.cdist(x1, x2, p=2)
 
     def _cosine_distance(self, x1: torch.Tensor, x2: torch.Tensor) -> torch.Tensor:
         x1 = F.normalize(x1, dim=-1)
@@ -120,9 +115,20 @@ class FEAT(nn.Module):
         z_proto = z_proto.unsqueeze(0) # [1, ways, hdim]
         z_proto = self.slf_attn(z_proto, z_proto, z_proto).squeeze(0) # [ways, hdim]
 
-        logits = -self.distance(z_query, z_proto) # [query, ways]
+        logits = -self._cosine_distance(z_query, z_proto) # [query, ways]
+        logits_reg = self._contrastive_regularization(z_support, support_labels, z_query, query_labels, ways)
+        
+        return logits, logits_reg
 
-        # contrastive regularization 
+    def _contrastive_regularization(self,
+        z_support: torch.Tensor,
+        support_labels: torch.Tensor,
+        z_query: torch.Tensor,
+        query_labels: torch.Tensor,
+        ways: int,
+    ) -> torch.Tensor:
+        """Computes the contrastive regularization term for the FEAT model."""
+
         query_labels = query_labels.argmax(1)
         all_labels = torch.cat([support_labels, query_labels], dim=0) # [ways*shot+query]
         all_tasks = torch.cat([z_support, z_query], dim=0) # [ways*shot+query, D]
@@ -136,7 +142,24 @@ class FEAT(nn.Module):
             for i in range(ways)
         ])  # [ways, D]
 
-        logits_reg = -self.distance(all_emb, ways_center) # [ways*shot+query, ways]
+        logits_reg = -self._cosine_distance(all_emb, ways_center) # [ways*shot+query, ways]
+        return logits_reg
+                                    
+    def evaluate(self,
+        train_imgs: torch.Tensor,
+        train_labels: torch.Tensor,
+        query_imgs: torch.Tensor,
+        query_labels: torch.Tensor,
+        criterion: nn.Module,
+        l2_weight: float = 0.0,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         
-        return logits, logits_reg
+        scores, reg = self(train_imgs, train_labels, query_imgs, query_labels)
+        acc = (scores.argmax(1) == query_labels.argmax(1)).float().mean()
 
+        loss = criterion(scores, query_labels.argmax(1))
+        loss += self.temperature * criterion(reg, torch.cat([train_labels, query_labels]))
+        if l2_weight:
+            loss += l2_weight * sum(torch.norm(p) for p in self.parameters())
+
+        return loss, acc

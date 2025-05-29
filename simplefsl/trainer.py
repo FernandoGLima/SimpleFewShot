@@ -19,9 +19,6 @@ class Trainer:
         self.l2_weight = l2_weight
         self.device = next(model.parameters()).device
         
-        method = self.model.__class__.__name__
-        self.evaluate = self._evaluate if method != 'FEAT' else self._evaluate_contrastive
-
     def train(self,
         manager,
         epochs: int,
@@ -60,7 +57,6 @@ class Trainer:
             total_loss += loss
             total_acc += acc
 
-
         return total_loss / episodes, total_acc / episodes
 
     def _train_step(self, task_data) -> Tuple[float, float]:
@@ -86,14 +82,18 @@ class Trainer:
         self.model.eval()
         return self._run_episodes(manager, episodes, train=False)
 
-    def _evaluate(self,
+    def evaluate(self,
         train_imgs: torch.Tensor,
         train_labels: torch.Tensor,
         query_imgs: torch.Tensor,
         query_labels: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
+
+        # for models with custom loss/evaluation logic
+        if hasattr(self.model, 'evaluate'): 
+            return self.model.evaluate(train_imgs, train_labels, query_imgs, query_labels, self.criterion, self.l2_weight)
         
-        scores = self.model(train_imgs, train_labels, query_imgs, query_labels)
+        scores = self.model(train_imgs, train_labels, query_imgs)
         acc = (scores.argmax(1) == query_labels.argmax(1)).float().mean()
 
         query_labels = query_labels.float() if isinstance(self.criterion, torch.nn.MSELoss) else query_labels.argmax(1)
@@ -102,23 +102,6 @@ class Trainer:
         if self.l2_weight:
             loss += self.l2_weight * sum(torch.norm(p) for p in self.model.parameters())
 
-        return loss, acc
-
-    def _evaluate_contrastive(self,
-        train_imgs: torch.Tensor,
-        train_labels: torch.Tensor,
-        query_imgs: torch.Tensor,
-        query_labels: torch.Tensor,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        
-        scores, reg = self.model(train_imgs, train_labels, query_imgs, query_labels)
-        acc = (scores.argmax(1) == query_labels.argmax(1)).float().mean()
-
-        loss = self.criterion(scores, query_labels.argmax(1))
-        loss += self.model.temperature * self.criterion(reg, torch.cat([train_labels, query_labels]))
-        if self.l2_weight:
-            loss += self.l2_weight * sum(torch.norm(p) for p in self.model.parameters())
-        
         return loss, acc
 
     def _prepare_task_data(self, task_data) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -135,10 +118,10 @@ class Trainer:
             'model_state_dict': self.model.state_dict(),
             'optimizer_state_dict': self.optimizer.state_dict(),
         }, path)
-        print(f"Checkpoint saved to {path}")
+        print(f">> Checkpoint saved to {path}")
         
     def load_checkpoint(self, path: str):   
         checkpoint = torch.load(path)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        print(f"Checkpoint loaded from {path}")
+        print(f">> Checkpoint loaded from {path}")
