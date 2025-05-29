@@ -92,12 +92,22 @@ Model name is required and should be used as informed on the models table, on th
 |------|-------|-----|--------|-----------|
 | 2    | 5     | 0   | 0.0001 | 0.0       |
 
-<!-- 
-Talvez colocar os augmentations aqui? 
-O nome do backbone também deve ser parametro?
-  - usar resnet como standard
--->
+## Generate GradCAM
 
+All heatmaps are generated for images from a class that was not presented during training. In order to generate a GradCAM for an image, run:
+
+```bash
+python explain.py \
+  --model <model_name> \
+  --model-path <model_path_.pth> \
+  --ways <number_of_classes_per_task> \
+  --shots <number_of_examples_per_class_per_task> \
+  --image <image_file_name_with_no_extension> \
+  --target-class <target_class_name> \
+  --classes <"target_class,other_test_class_for_fine_tuning"> \
+  --augment <cutmix/mixup/None>\
+  --save-path <path_to_save_image>
+```
 
 ## Citation
 
