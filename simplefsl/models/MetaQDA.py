@@ -144,7 +144,7 @@ class MetaQDA(nn.Module):
     self.backbone = backbone
     self.fe_dim = x_dim
 
-  def forward(self,  train_imgs, train_labels, query_imgs, qery_labels):
+  def forward(self,  train_imgs, train_labels, query_imgs, query_labels):
     support_features = self.backbone.forward(train_imgs)
     query_features = self.backbone.forward(query_imgs)
 
