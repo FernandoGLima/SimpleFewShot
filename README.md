@@ -32,7 +32,7 @@ The following model results are based on the original papers, evaluated on Mini-
 | **DN4**         | [https://arxiv.org/abs/1903.12290](https://arxiv.org/abs/1903.12290)             | dn4                  | 71.02                                                       |
 | **MSENet**      | [https://arxiv.org/abs/2409.07989v2](https://arxiv.org/abs/2409.07989v2)         | msenet               | 84.42                                                       |
 | **FEAT**        | [https://arxiv.org/abs/1812.03664](https://arxiv.org/abs/1812.03664)             | feat                 | 82.05                                                       |
-| **DSN**         |                                                                                  | dsn                  |                                                             |
+| **DSN**         | [https://ieeexplore.ieee.org/document/9157772](https://ieeexplore.ieee.org/document/9157772)| dsn                  |                                                             |
 | **METAQDA**     | [https://arxiv.org/abs/2101.02833](https://arxiv.org/abs/2101.02833)             | metaqda              | 84.28                                                       |
 | **Negative Margin** | [https://arxiv.org/abs/2003.12060](https://arxiv.org/abs/2003.12060)         | negativemargin       | 81.57                                                       |
 | **R2D2**        | [https://arxiv.org/abs/1805.08136](https://arxiv.org/abs/1805.08136)             | r2d2                 | 68.40                                                       |
