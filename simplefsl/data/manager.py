@@ -1,4 +1,3 @@
-import os
 import torch
 import random 
 import pandas as pd
@@ -41,7 +40,8 @@ class FewShotManager():
         shots: int, 
         backbone_name: str = None,
         augment: str = None,
-        seed: int = None
+        seed: int = None,
+        remove_img: str = None
     ):
         self.train_classes = train_classes
         self.test_classes = test_classes
@@ -57,6 +57,10 @@ class FewShotManager():
 
         if self.seed is not None:
             torch.manual_seed(seed)
+        
+        if remove_img is not None:
+            self.label_map = self.label_map[self.label_map.image_id != remove_img]
+            print("removed img", remove_img)
     
     @staticmethod
     def _get_mean_std(backbone_name: str):
