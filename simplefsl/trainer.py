@@ -77,8 +77,8 @@ class Trainer:
     def _val_step(self, task_data) -> Tuple[float, float]:
         train_imgs, train_labels, test_imgs, test_labels = self._prepare_task_data(task_data)
 
-        with torch.no_grad():
-            loss, acc = self.evaluate(train_imgs, train_labels, test_imgs, test_labels)
+        # with torch.no_grad():
+        loss, acc = self.evaluate(train_imgs, train_labels, test_imgs, test_labels)
 
         return loss.item(), acc.item()
 
