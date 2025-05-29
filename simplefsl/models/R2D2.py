@@ -65,7 +65,7 @@ class RRNet(nn.Module):
         self.lambda_rr = LambdaLayer(learn_lambda, init_lambda, lambda_base)
         self.adjust = AdjustLayer(init_scale=init_adj_scale, base=adj_base)
 
-    def forward(self, train_imgs, train_labels, query_imgs, query_labels):
+    def forward(self, train_imgs, train_labels, query_imgs):
         self.n_way = train_labels.size(1)
         self.n_shot = train_labels.size(0) // self.n_way
 

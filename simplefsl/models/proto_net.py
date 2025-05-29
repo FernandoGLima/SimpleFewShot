@@ -16,7 +16,6 @@ class PrototypicalNetworks(nn.Module):
         support_images: torch.Tensor,
         support_labels: torch.Tensor,
         query_images: torch.Tensor,
-        *args, 
     ) -> torch.Tensor:       
 
         # computa features 

@@ -21,7 +21,6 @@ class MAML(nn.Module):
         support_images: torch.Tensor,
         support_labels: torch.Tensor, 
         query_images: torch.Tensor,
-        query_labels: torch.Tensor = None
     ):
         support_feats = self.backbone(support_images)
         query_feats = self.backbone(query_images)

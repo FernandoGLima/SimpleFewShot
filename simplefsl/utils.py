@@ -9,7 +9,7 @@ def load_model(model: str, backbone: str) -> nn.Module:
     backbone_instance.reset_classifier(num_classes=0)
 
     Method = None
-
+    model = model.lower()
     if model == 'dn4':
         from simplefsl.models.dn4 import DN4 as Method
     elif model == 'feat':
@@ -28,14 +28,16 @@ def load_model(model: str, backbone: str) -> nn.Module:
         from simplefsl.models.tadam import TADAM as Method
     elif model == 'tapnet':
         from simplefsl.models.tapnet import TapNet as Method
-    elif model == 'R2D2':
+    elif model == 'r2d2':
         from simplefsl.models.R2D2 import RRNet as Method
-    elif model =='DSN':
+    elif model == 'dsn':
         from simplefsl.models.DSN import DSN as Method
-    elif model =='MetaQDA':
+    elif model == 'Metaqda':
         from simplefsl.models.MetaQDA import MetaQDA as Method
-    elif model =='NegativeMargin':
+    elif model == 'negativemargin':
         from simplefsl.models.NegativeMargin import NegativeMargin as Method
+    elif model == 'maml':
+        from simplefsl.models.maml import MAML as Method
     else:
         raise ValueError(f"Unsupported model type: {model}")
 

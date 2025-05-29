@@ -450,7 +450,7 @@ class MetaOptNet(nn.Module):
         self.backbone = backbone
         self.cls_head = ClassificationHead(base_learner, enable_scale)
     
-    def forward(self, support, support_labels, query, *args):
+    def forward(self, support, support_labels, query):
         emb_query = self.backbone.forward(query)
         emb_support = self.backbone.forward(support)
         

@@ -58,7 +58,7 @@ class NegativeMargin(nn.Module):
         batch_size = 4
         support_size = self.n_way * self.n_support
          
-        for epoch in range(50):
+        for _ in range(50):
             rand_id = np.random.permutation(support_size)
             for i in range(0, support_size, batch_size):
                 selected_id = torch.from_numpy(rand_id[i: min(i+batch_size, support_size)]).to(support_features.device)

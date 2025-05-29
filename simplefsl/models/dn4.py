@@ -16,7 +16,6 @@ class DN4(nn.Module):
         support_images: torch.Tensor,
         support_labels: torch.Tensor,
         query_images: torch.Tensor,
-        query_labels: torch.Tensor = None,
     ) -> torch.Tensor:       
 
         # extract last feature maps

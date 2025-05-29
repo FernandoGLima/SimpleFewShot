@@ -12,7 +12,7 @@ class DSN(nn.Module):
         super(DSN, self).__init__()
         self.backbone = backbone
 
-    def forward(self, train_imgs, train_labels, query_imgs, query_labels, normalize=False):
+    def forward(self, train_imgs, train_labels, query_imgs, normalize=False):
         """
         Constructs the subspace representation of each class(=mean of support vectors of each class) and
         returns the classification score (=L2 distance to each class prototype) on the query set.

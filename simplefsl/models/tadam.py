@@ -67,7 +67,6 @@ class TADAM(nn.Module):
         support_images: torch.Tensor,
         support_labels: torch.Tensor,
         query_images: torch.Tensor,
-        query_labels: torch.Tensor,
     ) -> torch.Tensor:       
 
         z_support = self._extract_film_features(support_images)
