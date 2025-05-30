@@ -22,23 +22,25 @@ It's designed to be flexible, extensible, and easy to integrate into your resear
 The following model results are based on the original papers, evaluated on Mini-Imagenet, using 5-way 5-shot tasks.
 
 | Model           | Paper Reference                                                                  | Input parameter name | [Mini-imagenet accuracy (%)](https://paperswithcode.com/sota/few-shot-image-classification-on-mini-3) |
-|-----------------|----------------------------------------------------------------------------------|----------------------|-------------------------------------------------------------|
-| **ProtoNet**    | [https://arxiv.org/abs/1703.05175](https://arxiv.org/abs/1703.05175)             | proto_net            | 68.20                                                       |
-| **RelationNet** | [https://arxiv.org/abs/1711.06025](https://arxiv.org/abs/1711.06025)             | relation_net         | 65.32                                                       |
-| **MatchingNet** | [https://arxiv.org/abs/1606.04080](https://arxiv.org/abs/1606.04080)             | matching_net         | 60.00                                                        |
-| **MetaOptNet**  | [https://arxiv.org/abs/1904.03758](https://arxiv.org/abs/1904.03758)             | metaopt_net          | 78.63                                                       |
-| **TapNet**      | [https://arxiv.org/abs/1905.06549](https://arxiv.org/abs/1905.06549)             | tapnet               | 76.36                                                       |
-| **TADAM**       | [https://arxiv.org/abs/1805.10123](https://arxiv.org/abs/1805.10123)             | tadam                | 76.70                                                       |
-| **DN4**         | [https://arxiv.org/abs/1903.12290](https://arxiv.org/abs/1903.12290)             | dn4                  | 71.02                                                       |
-| **MSENet**      | [https://arxiv.org/abs/2409.07989v2](https://arxiv.org/abs/2409.07989v2)         | msenet               | 84.42                                                       |
-| **FEAT**        | [https://arxiv.org/abs/1812.03664](https://arxiv.org/abs/1812.03664)             | feat                 | 82.05                                                       |
-| **DSN**         | [https://ieeexplore.ieee.org/document/9157772](https://ieeexplore.ieee.org/document/9157772)| dsn                  | 78.83                                                            |
-| **METAQDA**     | [https://arxiv.org/abs/2101.02833](https://arxiv.org/abs/2101.02833)             | metaqda              | 84.28                                                       |
-| **Negative Margin** | [https://arxiv.org/abs/2003.12060](https://arxiv.org/abs/2003.12060)         | negativemargin       | 81.57                                                       |
-| **R2D2**        | [https://arxiv.org/abs/1805.08136](https://arxiv.org/abs/1805.08136)             | r2d2                 | 68.40                                                       |
-| **MAML**        | [https://arxiv.org/abs/2101.02833](https://arxiv.org/abs/1703.03400)             | maml                 | 63.10                                                       |
+|-----------------|----------------------------------------------------------------------------------|----------------------|---------------------------------------------------------------|
+| **ProtoNet**    | [https://arxiv.org/abs/1703.05175](https://arxiv.org/abs/1703.05175)             | `proto_net`            | 68.20                                                       |
+| **RelationNet** | [https://arxiv.org/abs/1711.06025](https://arxiv.org/abs/1711.06025)             | `relation_net`         | 65.32                                                       |
+| **MatchingNet** | [https://arxiv.org/abs/1606.04080](https://arxiv.org/abs/1606.04080)             | `matching_net`         | 60.00                                                       |
+| **MetaOptNet**  | [https://arxiv.org/abs/1904.03758](https://arxiv.org/abs/1904.03758)             | `metaopt_net`          | 78.63                                                       |
+| **TapNet**      | [https://arxiv.org/abs/1905.06549](https://arxiv.org/abs/1905.06549)             | `tapnet`               | 76.36                                                       |
+| **TADAM**       | [https://arxiv.org/abs/1805.10123](https://arxiv.org/abs/1805.10123)             | `tadam`                | 76.70                                                       |
+| **DN4**         | [https://arxiv.org/abs/1903.12290](https://arxiv.org/abs/1903.12290)             | `dn4`                  | 71.02                                                       |
+| **MSENet**      | [https://arxiv.org/abs/2409.07989v2](https://arxiv.org/abs/2409.07989v2)         | `msenet`               | 84.42                                                       |
+| **FEAT**        | [https://arxiv.org/abs/1812.03664](https://arxiv.org/abs/1812.03664)             | `feat`                 | 82.05                                                       |
+| **DSN**         | [https://ieeexplore.ieee.org/document/9157772](https://ieeexplore.ieee.org/document/9157772)| `dsn`       | 78.83                                                       |
+| **METAQDA**     | [https://arxiv.org/abs/2101.02833](https://arxiv.org/abs/2101.02833)             | `metaqda`              | 84.28                                                       |
+| **Negative Margin** | [https://arxiv.org/abs/2003.12060](https://arxiv.org/abs/2003.12060)         | `negativemargin`       | 81.57                                                       |
+| **R2D2**        | [https://arxiv.org/abs/1805.08136](https://arxiv.org/abs/1805.08136)             | `r2d2`                 | 68.40                                                       |
+| **MAML**        | [https://arxiv.org/abs/2101.02833](https://arxiv.org/abs/1703.03400)             | `maml`                 | 63.10                                                       |
 
 All models are implemented as separate `.py` files under the [models/](/simplefsl/models) directory
+
+It is possible to use **ResNet** and **Swin** as backbones for the models. The respective input parameters are `resnet` and `swin`.
 
 ## Getting Started
 
@@ -79,6 +81,7 @@ In order to train a model with your data, run:
 ```bash
 python3 train.py \
   --model <model_name> \
+  --backbone <backbone_name> \
   --ways <number_of_classes_per_task> \
   --shots <number_of_examples_per_class_per_task> \
   --gpu <which_gpu_to_run> \
