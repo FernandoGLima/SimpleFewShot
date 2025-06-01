@@ -8,9 +8,9 @@ from simplefsl.utils import seed_everything, get_model_loss, load_model
 
 def main(model_name: str, backbone: str, ways: int, shots: int, gpu: int, lr: float, l2_weight: float):
     seed = 42
-    episodes = 2
+    episodes = 500
     epochs = 40
-    validate_every = 1
+    validate_every = 2
     
     if backbone == "resnet":
         backbone_name = 'resnet50.a3_in1k'
