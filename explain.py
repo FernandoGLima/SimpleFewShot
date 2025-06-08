@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import timm
 import cv2
 import argparse
 import torch.nn as nn
@@ -23,14 +22,14 @@ only a single image to the
 model forward pass
 '''
 class CustomModelWrapper(nn.Module):
-    def __init__(self, few_shot_model, support_imgs, support_labels):
+    def __init__(self, model, support_imgs, support_labels):
         super().__init__()
-        self.few_shot_model = few_shot_model
+        self.model = model
         self.support_imgs = support_imgs
         self.support_labels = support_labels
 
     def forward(self, x):
-        return self.few_shot_model.forward(self.support_imgs, self.support_labels, x)
+        return self.model.forward(self.support_imgs, self.support_labels, x)
 
 '''
 Reshape images
@@ -63,6 +62,7 @@ Fine tune model and apply GradCAM
 for image on unseen class during
 training.
 '''
+# passar o target class da imagem junto pro model wrapper
 def apply_cam(
         model_name: str,
         model_path: str,
@@ -135,9 +135,6 @@ def apply_cam(
 
             query_labels_indices = query_labels.argmax(1)
 
-            if hit_count == 0:
-                print(f"Current task classes: {class_names}")
-
             criterion = torch.nn.CrossEntropyLoss()
             opt = torch.optim.Adam(model.parameters(), lr=0.0001)
 
@@ -166,11 +163,11 @@ def apply_cam(
 
             if class_names[pred] == target_class:
                 if backbone_name == 'resnet50.a3_in1k':
-                    target_layers = [model.backbone.layer4[-1]]
-                    cam = GradCAM(model=wrapped_model, target_layers=target_layers)
+                    target_layer = wrapped_model.model.backbone.layer4[-1]
+                    cam = GradCAM(model=wrapped_model, target_layers=[target_layer])
                 elif backbone_name == 'swin_s3_tiny_224.ms_in1k':
-                    target_layers = [model.layers[-1].blocks[-1].norm2]
-                    cam = GradCAM(model=wrapped_model, target_layers=target_layers, reshape_transform=reshape_transform)
+                    target_layer = [model.layers[-1].blocks[-1].norm2]
+                    cam = GradCAM(model=wrapped_model, target_layers=[target_layer], reshape_transform=reshape_transform)
 
                 mask = cam(input_tensor=image, targets=None)
 
@@ -191,17 +188,17 @@ def apply_cam(
     print(f"Applied GradCAM to {img} and saved it to {save_path}.")
     return
 
-# python explain.py --model "metaopt_net" --model-path "model.pth" --ways 2 --shots 5 --image "img02000" --target-class "hemorrhage" --classes "hemorrhage,healthy" --save-path "heatmap.jpg"
+# python explain.py --model "metaopt_net" --model-path "model.pth" --ways 2 --shots 5 --image "img06628" --target-class "hemorrhage" --classes "hemorrhage,healthy" --save-path "heatmap.jpg"
 def main(args):
     apply_cam(args.model,
-                args.model_path, 
-                args.ways, 
-                args.shots, 
-                args.image, 
-                args.target_class, 
-                args.classes, 
-                args.augment, 
-                args.save_path)
+              args.model_path, 
+              args.ways, 
+              args.shots, 
+              args.image, 
+              args.target_class, 
+              args.classes, 
+              args.augment, 
+              args.save_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate GradCAM for FSL model.")
