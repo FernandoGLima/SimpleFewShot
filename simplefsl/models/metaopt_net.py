@@ -53,7 +53,7 @@ def one_hot(indices, depth):
     Returns: a (n_batch, m, depth) Tensor or (m, depth) Tensor.
     """
 
-    encoded_indicies = torch.zeros(indices.size() + torch.Size([depth])).cuda()
+    encoded_indicies = torch.zeros(indices.size() + torch.Size([depth]), device = indices.device)
     index = indices.view(indices.size()+torch.Size([1]))
     encoded_indicies = encoded_indicies.scatter_(1,index,1)
     
@@ -235,6 +235,8 @@ def MetaOptNetHead_SVM_CS(query, support, support_labels, n_way, n_shot, C_reg=0
     n_support = support.size(1)
     n_query = query.size(1)
 
+    device = support.device
+
     assert(query.dim() == 3)
     assert(support.dim() == 3)
     assert(query.size(0) == support.size(0) and query.size(2) == support.size(2))
@@ -253,10 +255,10 @@ def MetaOptNetHead_SVM_CS(query, support, support_labels, n_way, n_shot, C_reg=0
     #\alpha is an (n_support, n_way) matrix
     kernel_matrix = computeGramMatrix(support, support)
 
-    id_matrix_0 = torch.eye(n_way).expand(tasks_per_batch, n_way, n_way).cuda()
+    id_matrix_0 = torch.eye(n_way, device = support.device).expand(tasks_per_batch, n_way, n_way)
     block_kernel_matrix = batched_kronecker(kernel_matrix, id_matrix_0)
     #This seems to help avoid PSD error from the QP solver.
-    block_kernel_matrix += 1.0 * torch.eye(n_way*n_support).expand(tasks_per_batch, n_way*n_support, n_way*n_support).cuda()
+    block_kernel_matrix += 1.0 * torch.eye(n_way*n_support, device = support.device).expand(tasks_per_batch, n_way*n_support, n_way*n_support)
     
     support_labels_one_hot = one_hot(support_labels.view(tasks_per_batch * n_support), n_way) # (tasks_per_batch * n_support, n_support)
     support_labels_one_hot = support_labels_one_hot.view(tasks_per_batch, n_support, n_way)
@@ -281,9 +283,9 @@ def MetaOptNetHead_SVM_CS(query, support, support_labels, n_way, n_shot, C_reg=0
     b = Variable(torch.zeros(tasks_per_batch, n_support))
     #print (A.size(), b.size())
     if double_precision:
-        G, e, C, h, A, b = [x.double().cuda() for x in [G, e, C, h, A, b]]
+        G, e, C, h, A, b = [x.double().to(device) for x in [G, e, C, h, A, b]]
     else:
-        G, e, C, h, A, b = [x.float().cuda() for x in [G, e, C, h, A, b]]
+        G, e, C, h, A, b = [x.float().to(device) for x in [G, e, C, h, A, b]]
 
     # Solve the following QP to fit SVM:
     #        \hat z =   argmin_z 1/2 z^T G z + e^T z
