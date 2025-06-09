@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 
 torch.set_default_tensor_type(torch.FloatTensor)
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:3" if torch.cuda.is_available() else "cpu") ## mudar
 
 class MetaQDA_MAP(nn.Module):
     def __init__(self, x_dim, reg_param):
@@ -63,16 +63,25 @@ class MetaQDA_FB(nn.Module):
         self.nu = torch.nn.Parameter(torch.tensor(self.feature_dim, dtype=torch.float32))
         self.triu_diag = torch.nn.Parameter(torch.ones(self.feature_dim))
         self.triu_lower = torch.nn.Parameter(torch.eye(self.feature_dim))
-        self.triu_lower_mask = torch.triu(torch.ones(self.feature_dim, self.feature_dim), diagonal=1).t().to(DEVICE)
+        self.triu_lower_mask = torch.triu(torch.ones(self.feature_dim, self.feature_dim), diagonal=1).t()
         
     def fit_image_label(self, X, y):
+        device=X.device
+
+        self.m.data = self.m.data.to(device)
+        self.kappa.data = self.kappa.data.to(device)
+        self.nu.data = self.nu.data.to(device)
+        self.triu_diag.data = self.triu_diag.data.to(device)
+        self.triu_lower.data = self.triu_lower.data.to(device)
+
+
         y_not_one_hot = torch.argmax(y, dim=1)
         self.classes = np.unique(y_not_one_hot.cpu())
         self.mu = [None for i in self.classes]
         self.sigma_inv = [None for i in self.classes]
         self.biases = [None for i in self.classes]
         self.common_part = [None for i in self.classes]
-        self.lower_triu = torch.diag(torch.abs(self.triu_diag)) + self.triu_lower * self.triu_lower_mask
+        self.lower_triu = torch.diag(torch.abs(self.triu_diag)) + self.triu_lower * self.triu_lower_mask.to(device)
         
         kappa_ = torch.abs(self.kappa) + 1e-6
         nu_ = torch.clamp(self.nu, min=self.feature_dim-1+1e-6)
@@ -104,7 +113,7 @@ class MetaQDA_FB(nn.Module):
         return gaussian_dist
     
     def regularize(self, sigma):
-        return (1-self.reg_param) * sigma + self.reg_param * torch.eye(self.feature_dim).to(DEVICE)   
+        return (1-self.reg_param) * sigma + self.reg_param * torch.eye(self.feature_dim, device=sigma.device)
     
 ### common basic function
 def self_outer(x):
@@ -116,7 +125,8 @@ def self_outer(x):
     
 def mean_outer(x):
     feature_dim = x.shape[1]
-    S_ = torch.zeros((feature_dim,feature_dim), dtype=torch.float32).cuda() 
+    device = x.device
+    S_ = torch.zeros((feature_dim,feature_dim), dtype=torch.float32, device=device)
     for index, a_v in enumerate(x):
         S_ += torch.mm(a_v.unsqueeze(1), a_v.unsqueeze(0))
     
@@ -124,7 +134,8 @@ def mean_outer(x):
 
 def sum_outer(x):
     feature_dim = x.shape[1]
-    S_ = torch.zeros((feature_dim,feature_dim), dtype=torch.float32).cuda() 
+    device = x.device
+    S_ = torch.zeros((feature_dim,feature_dim), dtype=torch.float32, device=device)
     for a_v in x:
         S_ += torch.mm(a_v.unsqueeze(1), a_v.unsqueeze(0))
     
