@@ -32,7 +32,7 @@ def load_model(model: str, backbone: str) -> nn.Module:
         from simplefsl.models.R2D2 import RRNet as Method
     elif model == 'dsn':
         from simplefsl.models.DSN import DSN as Method
-    elif model == 'Metaqda':
+    elif model == 'metaqda':
         from simplefsl.models.MetaQDA import MetaQDA as Method
     elif model == 'negativemargin':
         from simplefsl.models.NegativeMargin import NegativeMargin as Method
@@ -59,7 +59,7 @@ def get_model_loss(model: nn.Module) -> nn.Module:
         "TapNet": nn.CrossEntropyLoss(),
         "R2D2": nn.CrossEntropyLoss(),
         "DSN": nn.CrossEntropyLoss(),
-        "MetaQDA": nn.CrossEntropyLoss(),
+        "metaqda": nn.CrossEntropyLoss(),
         "NegativeMargin": nn.CrossEntropyLoss(),
     }
     
