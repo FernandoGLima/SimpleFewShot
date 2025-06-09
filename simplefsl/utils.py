@@ -38,6 +38,8 @@ def load_model(model: str, backbone: str) -> nn.Module:
         from simplefsl.models.NegativeMargin import NegativeMargin as Method
     elif model == 'maml':
         from simplefsl.models.maml import MAML as Method
+    elif model == 'mtl':
+        from simplefsl.models.MTL import MtlLearner as Method
     else:
         raise ValueError(f"Unsupported model type: {model}")
 
@@ -61,6 +63,7 @@ def get_model_loss(model: nn.Module) -> nn.Module:
         "DSN": nn.CrossEntropyLoss(),
         "metaqda": nn.CrossEntropyLoss(),
         "NegativeMargin": nn.CrossEntropyLoss(),
+        "mtl": nn.CrossEntropyLoss(),
     }
     
     model_name = model.__class__.__name__
