@@ -13,15 +13,19 @@ class MAML(nn.Module):
         super().__init__()
         self.backbone = backbone
         self.feat_dim = backbone.num_features 
-        self.classifier = nn.Linear(self.feat_dim, num_classes)
         self.inner_lr = inner_lr
         self.inner_steps = inner_steps
+        self.flag = True
 
     def forward(self, 
         support_images: torch.Tensor,
         support_labels: torch.Tensor, 
         query_images: torch.Tensor,
     ):
+        if self.flag == True:
+            self.classifier = nn.Linear(self.feat_dim, query_images.size(0), device=query_images.device)
+            self.flag = False
+
         support_feats = self.backbone(support_images)
         query_feats = self.backbone(query_images)
 
