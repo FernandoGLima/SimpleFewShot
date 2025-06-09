@@ -57,7 +57,7 @@ class RRFeatures(nn.Module):
 def t_(x):
     return t(x, 0, 1)
 
-#foi retirado o linsys (linear system solver) que é usado no lugar de fazer a inversão da matriz
+# The linsys (linear system solver), which is used in place of matrix inversion, has been removed
 class RRNet(nn.Module):
     def __init__(self, backbone, learn_lambda=True, init_lambda=1, init_adj_scale=1e-4, lambda_base=1, adj_base=1):
         super(RRNet, self).__init__()
