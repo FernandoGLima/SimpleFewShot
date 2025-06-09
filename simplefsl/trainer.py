@@ -24,12 +24,15 @@ class Trainer:
         epochs: int,
         train_episodes: int,
         validate_every: int = 2, 
-        val_episodes: int = 400 ,
+        val_episodes: int = 400,
+        save_checkpoint: bool = False
     ) -> Tuple[List[Tuple[int, float, float]], List[Tuple[int, float, float]]]:
         
         start_time = time.time()
         self.model.train()
         train_logs, val_logs = [], []
+
+        best_val_acc = 0.0
 
         for epoch in range(epochs):
             epoch_start = time.time()
@@ -42,6 +45,10 @@ class Trainer:
                 val_loss, val_acc = self.validate(manager, val_episodes)
                 val_logs.append((epoch + 1, val_loss, val_acc))
                 print(f"Validation - Loss: {val_loss:.3f} - Acc: {val_acc:.2f} - Time: {time.time() - val_start:.0f}s\n")
+
+                if save_checkpoint and val_acc > best_val_acc:
+                    best_val_acc = val_acc
+                    self.save_checkpoint(f'./checkpoints/{self.model.__class__.__name__}{manager.ways}w{manager.shots}s.pth')
 
         print(f'Training completed in {time.time() - start_time:.0f}s')
         print(f'Best validation acc: {max(val_logs, key=lambda x: x[2])[2]:.2f} at epoch {max(val_logs, key=lambda x: x[2])[0]}')

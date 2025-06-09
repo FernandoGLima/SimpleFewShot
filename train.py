@@ -50,7 +50,7 @@ def main(model_name: str, backbone: str, ways: int, shots: int, gpu: int, lr: fl
     print(f'training {model.__class__.__name__} with {ways}-way-{shots}-shot on {backbone_name}')
     trainer.train(manager, epochs, episodes, validate_every)
 
-    # trainer.save_checkpoint(f'{model.__class__.__name__}.pth')
+    # trainer.save_checkpoint(f'./checkpoints/{model.__class__.__name__}{ways}w{shots}s.pth')
 
 
 if __name__ == "__main__":
