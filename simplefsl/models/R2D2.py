@@ -76,15 +76,15 @@ class RRNet(nn.Module):
         
         if self.n_way * self.n_shot > self.output_dim + 1:
             rr_type = 'standard'
-            I = Variable(torch.eye(self.output_dim + 1).cuda())
+            I = torch.eye(self.output_dim + 1, device = zs.device)
         else:
             rr_type = 'woodbury'
-            I = Variable(torch.eye(self.n_way * self.n_shot).cuda())
+            I = torch.eye(self.n_way * self.n_shot, device = zs.device)
 
         y_inner = train_labels / np.sqrt(self.n_way * self.n_shot)
         
         # add a column of ones for the bias
-        ones = Variable(torch.unsqueeze(torch.ones(zs.size(0)).cuda(), 1))
+        ones = torch.ones(zs.size(0), 1, device = zs.device)
         if rr_type == 'woodbury':
             wb = self.rr_woodbury(torch.cat((zs, ones), 1), self.n_way, self.n_shot, I, y_inner)
 
@@ -117,21 +117,22 @@ class RRNet(nn.Module):
 class AdjustLayer(nn.Module):
     def __init__(self, init_scale=1e-4, init_bias=0, base=1):
         super().__init__()
-        self.scale = nn.Parameter(torch.FloatTensor([init_scale]).cuda())
-        self.bias = nn.Parameter(torch.FloatTensor([init_bias]).cuda())
+        self.scale = nn.Parameter(torch.FloatTensor([init_scale]))
+        self.bias = nn.Parameter(torch.FloatTensor([init_bias]))
         self.base = base
 
     def forward(self, x):
+        bias_on_device = self.bias.to(x.device)
         if self.base == 1:
-            return x * self.scale + self.bias
+            return x * self.scale + bias_on_device
         else:
-            return x * (self.base ** self.scale) + self.base ** self.bias - 1
+            return x * (self.base ** self.scale) + self.base ** bias_on_device - 1
 
 
 class LambdaLayer(nn.Module):
     def __init__(self, learn_lambda=True, init_lambda=1, base=1):
         super().__init__()
-        self.l = torch.FloatTensor([init_lambda]).cuda()
+        self.l = torch.FloatTensor([init_lambda])
         self.base = base
         if learn_lambda:
             self.l = nn.Parameter(self.l)
@@ -139,7 +140,8 @@ class LambdaLayer(nn.Module):
             self.l = Variable(self.l)
 
     def forward(self, x):
+        l_on_device = self.l.to(x.device)
         if self.base == 1:
-            return x * self.l
+            return x * l_on_device
         else:
-            return x * (self.base ** self.l)
+            return x * (self.base ** l_on_device)
