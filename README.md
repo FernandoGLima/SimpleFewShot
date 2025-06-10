@@ -98,19 +98,20 @@ Model name is required and should be used as informed on the models table, on th
 
 ## Generate GradCAM
 
-All heatmaps are generated for images from a class that was not presented during training. In order to generate a GradCAM for an image, run:
+All heatmaps are generated for images from a class that was not presented during training. Not all models can generate GradCAM explainability, due to their architecture.
+In order to generate a GradCAM for an image, run:
 
 ```bash
 python explain.py \
   --model <model_name> \
-  --model-path <model_path_.pth> \
+  --weights <weights.pth> \
   --ways <number_of_classes_per_task> \
   --shots <number_of_examples_per_class_per_task> \
+  --gpu <gpu_index> \
   --image <image_file_name_with_no_extension> \
   --target-class <target_class_name> \
   --classes <"target_class,other_test_class_for_fine_tuning"> \
-  --augment <cutmix/mixup/None>\
-  --save-path <path_to_save_image>
+  --augment <cutmix/mixup/None>
 ```
 
 ## Citation
