@@ -36,7 +36,7 @@ The following model results are based on the original papers, evaluated on Mini-
 | **METAQDA**     | [https://arxiv.org/abs/2101.02833](https://arxiv.org/abs/2101.02833)             | `metaqda`              | 84.28                                                       |
 | **Negative Margin** | [https://arxiv.org/abs/2003.12060](https://arxiv.org/abs/2003.12060)         | `negativemargin`       | 81.57                                                       |
 | **R2D2**        | [https://arxiv.org/abs/1805.08136](https://arxiv.org/abs/1805.08136)             | `r2d2`                 | 68.40                                                       |
-| **MAML**        | [https://arxiv.org/abs/2101.02833](https://arxiv.org/abs/1703.03400)             | `maml`                 | 63.10                                                       |
+| **MAML**        | [https://arxiv.org/abs/1703.03400](https://arxiv.org/abs/1703.03400)             | `maml`                 | 63.10                                                       |
 | **MTL**        | [https://arxiv.org/abs/1812.02391](https://arxiv.org/abs/1812.02391)             | `mtl`                   | 74.30                                                       |
 
 All models are implemented as separate `.py` files under the [models/](/simplefsl/models) directory
