@@ -43,7 +43,10 @@ def main(model_name: str, backbone: str, ways: int, shots: int, gpu: int, lr: fl
 
     # training
     criterion = get_model_loss(model)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    if backbone == "resnet":
+        optimizer = torch.optim.Adam(model.parameters(), lr = lr)
+    elif backbone == "swin":
+        optimizer = torch.optim.AdamW(model.parameters(), lr = lr, weight_decay = 0.005)
     trainer = Trainer(model, criterion, optimizer, l2_weight=l2_weight)
     # trainer.load_checkpoint('model.pth')
 
