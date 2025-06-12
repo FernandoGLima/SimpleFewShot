@@ -67,7 +67,8 @@ def main(args):
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
 
     data_path = "/home/rodrigocm/datasets/brset/data"
-    args.weights = os.path.join("/home/rodrigocm/research/SimpleFewShot/checkpoints", args.weights)
+    # args.weights = os.path.join("/home/rodrigocm/research/SimpleFewShot/checkpoints", args.weights)
+    args.weights = os.path.join("/home/carlosmarquesr/projects/SimpleFewShot/checkpoints/best", args.weights)
     save_path = "/home/rodrigocm/research/SimpleFewShot/gradcam"
 
     orig_image = read_image(f"{data_path}/imgs/{args.image}.jpg").float() / 255.0 #img06628
@@ -79,7 +80,8 @@ def main(args):
     n_updates = 52
     epochs = n_updates * 5 // args.shots
 
-    backbone_name = 'resnet50.a3_in1k'
+    # backbone_name = 'resnet50.a3_in1k'
+    backbone_name = 'swin_s3_tiny_224.ms_in1k'
     label_path = f'{data_path}/clean1.csv'
 
     args.classes = args.classes.split(",")
@@ -159,10 +161,9 @@ def main(args):
                     target_layer = wrapped_model.model.backbone.layer4[-1]
                     cam = GradCAM(model=wrapped_model, target_layers=[target_layer])
                 elif backbone_name == 'swin_s3_tiny_224.ms_in1k':
-                    target_layer = [wrapped_model.model.backbone.layers[-1].blocks[-1].norm2]
+                    target_layer = wrapped_model.model.backbone.layers[-1].blocks[-1].norm2
                     cam = GradCAM(model=wrapped_model, target_layers=[target_layer], reshape_transform=reshape_transform)
-
-                wrapped_model.model.train()
+                
                 mask = cam(input_tensor=image, targets=target)
 
                 masks = masks + mask
@@ -178,7 +179,7 @@ def main(args):
 
     cam_image = show_cam_on_image(rgb_img, final_mask)
 
-    cv2.imwrite(os.path.join(save_path, f"{args.image}_{args.model}_{args.ways}w{args.shots}s.jpg"), cam_image)
+    cv2.imwrite(os.path.join(save_path, f"{args.image}_{backbone_name}_{args.model}_{args.ways}w{args.shots}s.jpg"), cam_image)
 
     print(f"Applied GradCAM to {args.image} and saved it to {save_path}.")
     return
