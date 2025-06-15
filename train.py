@@ -68,7 +68,7 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', type=str, default="resnet", help='Backbone name')
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate (default: 0.001)')
     parser.add_argument('--l2_weight', type=float, default=0.0, help='L2 regularization term (default: 0.0001)')
-    parser.add_argument('--aug', type=str, default=None, help="Data augmentation technique")
+    parser.add_argument('--augment', type=str, default=None, help="Data augmentation technique")
 
     args = parser.parse_args()
     main(args.model, args.backbone, args.ways, args.shots, args.gpu, args.lr, args.l2_weight, args.aug)
