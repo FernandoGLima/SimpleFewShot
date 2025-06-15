@@ -38,7 +38,7 @@ def main(model_name: str, backbone: str, ways: int, shots: int, gpu: int, lr: fl
                              ways,
                              shots,
                              backbone_name,
-                             augment=None,
+                             augment=aug,
                              seed=seed)
 
     # training
@@ -71,4 +71,4 @@ if __name__ == "__main__":
     parser.add_argument('--augment', type=str, default=None, help="Data augmentation technique")
 
     args = parser.parse_args()
-    main(args.model, args.backbone, args.ways, args.shots, args.gpu, args.lr, args.l2_weight, args.aug)
+    main(args.model, args.backbone, args.ways, args.shots, args.gpu, args.lr, args.l2_weight, args.augment)
