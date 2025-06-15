@@ -6,7 +6,7 @@ from simplefsl.data.manager import FewShotManager
 from simplefsl.trainer import Trainer
 from simplefsl.utils import seed_everything, get_model_loss, load_model
 
-def main(model_name: str, backbone: str, ways: int, shots: int, gpu: int, lr: float, l2_weight: float):
+def main(model_name: str, backbone: str, ways: int, shots: int, gpu: int, lr: float, l2_weight: float, aug: str):
     seed = 42
     episodes = 500
     epochs = 40
@@ -47,10 +47,13 @@ def main(model_name: str, backbone: str, ways: int, shots: int, gpu: int, lr: fl
         optimizer = torch.optim.Adam(model.parameters(), lr = lr)
     elif backbone == "swin":
         optimizer = torch.optim.AdamW(model.parameters(), lr = lr, weight_decay = 0.005)
-    trainer = Trainer(model, criterion, optimizer, l2_weight=l2_weight)
+    trainer = Trainer(model, criterion, optimizer, l2_weight=l2_weight, augment_type = aug)
     # trainer.load_checkpoint('model.pth')
 
-    print(f'training {model.__class__.__name__} with {ways}-way-{shots}-shot on {backbone_name}')
+    train_description = f'training {model.__class__.__name__} with {ways}-way-{shots}-shot on {backbone_name}'
+    if aug is not None:
+        train_description += f' using {aug}'
+    print(train_description)
     trainer.train(manager, epochs, episodes, validate_every)
 
     # trainer.save_checkpoint(f'./checkpoints/{model.__class__.__name__}{ways}w{shots}s.pth')
@@ -65,6 +68,7 @@ if __name__ == "__main__":
     parser.add_argument('--backbone', type=str, default="resnet", help='Backbone name')
     parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate (default: 0.001)')
     parser.add_argument('--l2_weight', type=float, default=0.0, help='L2 regularization term (default: 0.0001)')
-    
+    parser.add_argument('--aug', type=str, default=None, help="Data augmentation technique")
+
     args = parser.parse_args()
-    main(args.model, args.backbone, args.ways, args.shots, args.gpu, args.lr, args.l2_weight)
+    main(args.model, args.backbone, args.ways, args.shots, args.gpu, args.lr, args.l2_weight, args.aug)

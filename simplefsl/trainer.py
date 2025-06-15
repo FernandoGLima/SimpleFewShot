@@ -1,9 +1,9 @@
 import torch
 import torch.nn as nn
 import time
+from torchvision.transforms import v2
 from tqdm import tqdm
-
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 class Trainer:
     def __init__(
@@ -12,12 +12,15 @@ class Trainer:
         criterion: nn.Module,
         optimizer: torch.optim,
         l2_weight: float = 1e-4,
+        augment_type: Optional[str] = None, 
     ):
         self.model = model
         self.criterion = criterion 
         self.optimizer = optimizer
         self.l2_weight = l2_weight
         self.device = next(model.parameters()).device
+        self.augment_type = augment_type
+        self.augment_transform = None
         
     def train(self,
         manager,
@@ -25,7 +28,7 @@ class Trainer:
         train_episodes: int,
         validate_every: int = 2, 
         val_episodes: int = 400,
-        save_checkpoint: bool = False
+        save_checkpoint: bool = True
     ) -> Tuple[List[Tuple[int, float, float]], List[Tuple[int, float, float]]]:
         
         start_time = time.time()
@@ -33,6 +36,11 @@ class Trainer:
         train_logs, val_logs = [], []
 
         best_val_acc = 0.0
+
+        if self.augment_type == 'cutmix':
+            self.augment_transform = v2.CutMix(num_classes = manager.ways, alpha = 1.0)
+        elif self.augment_type == 'mixup':
+            self.augment_transform = v2.MixUp(num_classes = manager.ways, alpha = 1.0)
 
         for epoch in range(epochs):
             epoch_start = time.time()
@@ -48,7 +56,9 @@ class Trainer:
 
                 if save_checkpoint and val_acc > best_val_acc:
                     best_val_acc = val_acc
-                    self.save_checkpoint(f'./checkpoints/{self.model.__class__.__name__}{manager.ways}w{manager.shots}s.pth')
+                    checkpoint_file = f'./checkpoints/{self.model.__class__.__name__}{manager.ways}w{manager.shots}s'
+                    checkpoint_file += f'-{self.augment_type}.pth' if self.augment_type is not None else '.pth'
+                    self.save_checkpoint(checkpoint_file)
 
         print(f'Training completed in {time.time() - start_time:.0f}s')
         print(f'Best validation acc: {max(val_logs, key=lambda x: x[2])[2]:.2f} at epoch {max(val_logs, key=lambda x: x[2])[0]}')
@@ -57,8 +67,9 @@ class Trainer:
     def _run_episodes(self, manager, episodes: int, train: bool) -> Tuple[float, float]:
         total_loss, total_acc = 0.0, 0.0
         self.model.train(train)
-
-        for _ in tqdm(range(episodes), desc="Training" if train else "Validation", leave=False):
+            
+        # for _ in tqdm(range(episodes), desc="Training" if train else "Validation", leave=False):
+        for _ in range(episodes):
             task_data = manager.get_fewshot_task(train)
             loss, acc = self._train_step(task_data) if train else self._val_step(task_data)
             total_loss += loss
@@ -68,6 +79,10 @@ class Trainer:
 
     def _train_step(self, task_data) -> Tuple[float, float]:
         train_imgs, train_labels, query_imgs, query_labels = self._prepare_task_data(task_data)
+
+        if self.augment_transform:
+            train_imgs, train_labels = self.augment_transform(train_imgs, torch.argmax(train_labels, dim=1))
+            query_imgs, query_labels = self.augment_transform(query_imgs, torch.argmax(query_labels, dim=1))
 
         loss, acc = self.evaluate(train_imgs, train_labels, query_imgs, query_labels)
 
