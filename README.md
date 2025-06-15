@@ -87,7 +87,8 @@ python3 train.py \
   --shots <number_of_examples_per_class_per_task> \
   --gpu <which_gpu_to_run> \
   --lr <lr_value> \
-  --l2_weight <l2_weight_value>
+  --l2_weight <l2_weight_value> \
+  --augment <cutmix/mixup/None>
 ```
 
 Model name is required and should be used as informed on the models table, on the `Input parameter name` column. Standard values for the other parameters are given below:
